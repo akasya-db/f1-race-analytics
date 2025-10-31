@@ -82,6 +82,55 @@ CREATE TABLE constructor (
 CREATE INDEX constructor_country_id_idx ON constructor(country_id);
 
 -- ============================================
+-- DRIVER 
+-- ============================================
+CREATE TABLE driver (
+    id                              VARCHAR(100) PRIMARY KEY,
+
+    -- biographical information
+    name                            VARCHAR(100) NOT NULL,
+    first_name                      VARCHAR(100),
+    last_name                       VARCHAR(100),
+    full_name                       VARCHAR(100) NOT NULL,
+    abbreviation                    VARCHAR(10),
+    permanent_number                INT,
+    gender                          VARCHAR(20),
+    date_of_birth                   DATE,
+    date_of_death                   DATE,
+    place_of_birth                  VARCHAR(100),
+
+    -- nationality / origin information
+    country_of_birth_country_id     VARCHAR(100) NOT NULL,
+    nationality_country_id          VARCHAR(100) NOT NULL,
+
+    -- best career results
+    best_championship_position      INT,
+    best_race_result                INT,
+
+    -- aggregated career stats
+    total_championship_wins         INT          NOT NULL,
+    total_race_starts               INT          NOT NULL,
+    total_race_wins                 INT          NOT NULL,
+    total_race_laps                 INT          NOT NULL,
+    total_podiums                   INT          NOT NULL,
+    total_points                    DECIMAL(8,2) NOT NULL,
+    total_pole_positions            INT          NOT NULL,
+
+    -- whether this is a real driver or simulation data
+    is_real                         BOOLEAN      DEFAULT TRUE,
+
+    -- foreign keys
+    FOREIGN KEY (country_of_birth_country_id) REFERENCES country(id),
+    FOREIGN KEY (nationality_country_id)      REFERENCES country(id)
+);
+
+-- helpful indexes for common lookups and filtering
+CREATE INDEX drv_nationality_idx          ON driver(nationality_country_id);
+CREATE INDEX drv_country_of_birth_idx     ON driver(country_of_birth_country_id);
+CREATE INDEX drv_permanent_number_idx     ON driver(permanent_number);
+
+
+-- ============================================
 -- RACE  
 -- ============================================
 CREATE TABLE race (
@@ -132,6 +181,26 @@ CREATE INDEX rcda_position_display_order_idx ON race_data(position_display_order
 CREATE INDEX rcda_driver_id_idx              ON race_data(driver_id);
 CREATE INDEX rcda_constructor_id_idx         ON race_data(constructor_id);
 CREATE INDEX rcda_driver_number_idx          ON race_data(driver_number);
+
+
+-- ============================================
+-- RACE DRIVER STANDING
+-- ============================================
+CREATE TABLE race_driver_standing (
+    race_id             INT          NOT NULL,          -- FK to race(id)
+    driver_id           VARCHAR(100) NOT NULL,          -- FK to driver(id)
+
+    position_number     INT          NOT NULL,          
+    points              DECIMAL(8,2) NOT NULL,          
+
+    PRIMARY KEY (race_id, driver_id),
+
+    FOREIGN KEY (race_id)   REFERENCES race(id),
+    FOREIGN KEY (driver_id) REFERENCES driver(id)
+);
+
+-- index to quickly get the full standings for a given race
+CREATE INDEX rds_race_id_idx ON race_driver_standing(race_id);
 
 -- ============================================
 -- RACE CONSTRUCTOR STANDING 
