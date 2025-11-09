@@ -1,23 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>Register</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Üye Ol | F1DB</title>
+  <style>
+    body, html { height: 100%; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    #register-page {
+      display: flex; justify-content: center; align-items: center; height: 100vh;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+    }
+    .register-card {
+      position: relative; background-color: #fff; padding: 40px 30px; border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); width: 90vw; max-width: 400px;
+      text-align: center; box-sizing: border-box;
+    }
+    .register-card h1 { margin-top: 0; margin-bottom: 30px; color: #333; font-size: 28px; }
+    .input-group { text-align: left; margin-bottom: 20px; width: 100%; }
+    .input-group label { display: block; font-weight: 600; margin-bottom: 5px; color: #555; }
+    .input-group input {
+      width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; outline: none;
+      transition: 0.2s; box-sizing: border-box;
+    }
+    .input-group input:focus { border-color: #2575fc; box-shadow: 0 0 0 2px rgba(37, 117, 252, 0.2); }
+    button {
+      width: 100%; padding: 12px; background-color: #2575fc; color: #fff; font-weight: 600;
+      border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; box-sizing: border-box;
+    }
+    button:hover { background-color: #1851c2; }
+    .alert {
+      position: absolute; top: 10px; left: 50%; padding: 12px 20px; border-radius: 8px; color: #fff; font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); z-index: 10; min-width: 250px; text-align: center;
+      opacity: 0; transform: translate(-50%, -20px); visibility: hidden; transition: all 0.4s ease;
+    }
+    .alert.show { opacity: 1; transform: translate(-50%, 0); visibility: visible; }
+    .alert.error { background-color: #e74c3c; }
+    .alert.success { background-color: #2ecc71; }
+    .switch { margin-top: 16px; font-size: 14px; color: #555; }
+    .switch a { color: #2575fc; font-weight: 600; text-decoration: none; }
+    .switch a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
-    <h2>Register Page</h2>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <p>{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+    <div id="register-page">
+  <div class="register-card">
+    <div id="alert-message" class="alert"></div>
+
+    <h1>Register</h1>
+
+    <!-- New backend: auth.register -->
     <form action="{{ url_for('auth.register') }}" method="POST">
-        <input type="text" name="username" placeholder="Username" required />
-        <input type="password" name="password" placeholder="Password" required />
-        <button type="submit">Register</button>
+      <!-- These three fields are shown but NOT sent to backend (no name attribute) -->
+      <div class="input-group">
+        <label for="name">First Name</label>
+        <input id="name" placeholder="Enter your first name" />
+      </div>
+      <div class="input-group">
+        <label for="surname">Last Name</label>
+        <input id="surname" placeholder="Enter your last name" />
+      </div>
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="Enter your email address" />
+      </div>
+
+      <!-- Required by backend -->
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input id="username" name="username" placeholder="Enter your username" required />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required />
+      </div>
+
+      <button type="submit">Register</button>
     </form>
-    <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+
+    <p class="switch">
+      Already have an account?
+      <a href="{{ url_for('auth.login') }}">Login</a>
+    </p>
+  </div>
+</div>
+
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+    <!-- Flash mesajlarını JSON olarak göm -->
+    <script id="flash-data" type="application/json">
+    {{ get_flashed_messages(with_categories=True)|tojson }}
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const alertBox = document.getElementById('alert-message');
+
+    // JSON script içeriğini oku ve parse et
+    const raw = (document.getElementById('flash-data')?.textContent || '[]').trim();
+    let items = [];
+    try { items = JSON.parse(raw || '[]'); } catch (e) { console.error('Flash JSON parse hatası:', e); }
+
+    if (items.length > 0) {
+        // with_categories=True ise ["kategori","mesaj"] gelir; değilse sadece "mesaj" gelir
+        let category = 'error';
+        let text = '';
+
+        if (Array.isArray(items[0])) {
+        [category, text] = items[0];
+        } else {
+        text = items[0];
+        }
+
+        alertBox.textContent = text;
+        alertBox.classList.add('show', category === 'success' ? 'success' : 'error');
+        setTimeout(function () { alertBox.classList.remove('show'); }, 3000);
+    }
+    });
+    </script>
+
+    {% endif %}
+    {% endwith %}
+
 </body>
 </html>
