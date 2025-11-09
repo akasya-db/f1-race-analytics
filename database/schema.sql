@@ -15,18 +15,16 @@ DROP TABLE IF EXISTS driver CASCADE;
 DROP TABLE IF EXISTS circuit CASCADE;
 DROP TABLE IF EXISTS country CASCADE;
 
--- ============================================
--- Core dictionaries
--- ============================================
-
--- Country dictionary (lookup)
+-- Countries
 CREATE TABLE country (
     id            VARCHAR(100)  PRIMARY KEY,
     alpha3_code   VARCHAR(3)    NOT NULL UNIQUE,
     name          VARCHAR(100)  NOT NULL
 );
 
--- Uyarı: "user" SQL'de anahtar kelime olabilir. Bu yüzden tablo adı tırnaklı.
+
+
+-- User accounts
 CREATE TABLE "user" (
     id            VARCHAR(100) PRIMARY KEY,
     country_id    VARCHAR(100) REFERENCES country(id),
@@ -36,6 +34,7 @@ CREATE TABLE "user" (
     date_joined   TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX user_username_idx ON "user"(username);
 CREATE INDEX user_country_id_idx ON "user"(country_id);
 
 -- Circuits
@@ -57,12 +56,11 @@ CREATE TABLE circuit (
   FOREIGN KEY (country_id) REFERENCES country (id)
 );
 
+CREATE INDEX circuit_name_idx ON circuit(name);
 CREATE INDEX circuit_country_id_idx ON circuit(country_id);
-CREATE INDEX circuit_place_name_idx ON circuit(place_name);
 
--- ============================================
--- Constructor/Team information
--- ============================================
+
+-- Constructor/Teams
 CREATE TABLE constructor (
     id                           VARCHAR(100)  NOT NULL,
     country_id                   VARCHAR(100)  NOT NULL,
@@ -79,15 +77,13 @@ CREATE TABLE constructor (
     FOREIGN KEY (country_id) REFERENCES country(id)
 );
 
+CREATE INDEX constructor_name_idx ON constructor(name);
 CREATE INDEX constructor_country_id_idx ON constructor(country_id);
+-- CREATE INDEX constructor_is_real_idx ON constructor(is_real);
 
--- ============================================
--- DRIVER 
--- ============================================
+-- Drivers 
 CREATE TABLE driver (
     id                              VARCHAR(100) PRIMARY KEY,
-
-    -- biographical information
     name                            VARCHAR(100) NOT NULL,
     first_name                      VARCHAR(100),
     last_name                       VARCHAR(100),
@@ -98,16 +94,10 @@ CREATE TABLE driver (
     date_of_birth                   DATE,
     date_of_death                   DATE,
     place_of_birth                  VARCHAR(100),
-
-    -- nationality / origin information
     country_of_birth_country_id     VARCHAR(100) NOT NULL,
     nationality_country_id          VARCHAR(100) NOT NULL,
-
-    -- best career results
     best_championship_position      INT,
     best_race_result                INT,
-
-    -- aggregated career stats
     total_championship_wins         INT          NOT NULL,
     total_race_starts               INT          NOT NULL,
     total_race_wins                 INT          NOT NULL,
@@ -115,29 +105,22 @@ CREATE TABLE driver (
     total_podiums                   INT          NOT NULL,
     total_points                    DECIMAL(8,2) NOT NULL,
     total_pole_positions            INT          NOT NULL,
-
-    -- whether this is a real driver or simulation data
     is_real                         BOOLEAN      DEFAULT TRUE,
 
-    -- foreign keys
     FOREIGN KEY (country_of_birth_country_id) REFERENCES country(id),
     FOREIGN KEY (nationality_country_id)      REFERENCES country(id)
 );
 
--- helpful indexes for common lookups and filtering
+CREATE INDEX driver_name_idx ON driver(full_name);
+CREATE INDEX driver_abbreviation_idx ON driver(abbreviation);
 CREATE INDEX drv_nationality_idx          ON driver(nationality_country_id);
 CREATE INDEX drv_country_of_birth_idx     ON driver(country_of_birth_country_id);
-CREATE INDEX drv_permanent_number_idx     ON driver(permanent_number);
 
 
--- ============================================
--- RACE  
--- ============================================
+-- Races  
 CREATE TABLE race (
     id                   INT PRIMARY KEY,
     circuit_id           VARCHAR(100) NOT NULL REFERENCES circuit(id),
-
-    -- Non-key (iş ihtiyaçlarına göre minimal set)
     year                 INT          NOT NULL,
     round                INT          NOT NULL,
     date                 DATE         NOT NULL,
@@ -148,15 +131,15 @@ CREATE TABLE race (
     is_real              BOOLEAN      DEFAULT TRUE,
 
     
-    UNIQUE (year, round) -- Yarış sezonu boyunca tekil tur (round) için pratik kısıt
+    UNIQUE (year, round)
 );
--- Yararlı indeksler
+
 CREATE INDEX race_year_idx       ON race(year);
 CREATE INDEX race_circuit_id_idx ON race(circuit_id);
+-- CREATE INDEX race_official_name_idx ON race(official_name);
 
--- ============================================
--- RACE DATA
--- ============================================
+
+-- Race data
 CREATE TABLE race_data (
     id                                      BIGSERIAL    PRIMARY KEY,
     race_id                                 INT          NOT NULL,             -- FK race(id)
@@ -175,20 +158,17 @@ CREATE TABLE race_data (
     FOREIGN KEY (race_id)        REFERENCES race        (id)
 );
 
--- Useful indexes
+
 CREATE INDEX rcda_race_id_idx                ON race_data(race_id);
 CREATE INDEX rcda_position_display_order_idx ON race_data(position_display_order);
 CREATE INDEX rcda_driver_id_idx              ON race_data(driver_id);
 CREATE INDEX rcda_constructor_id_idx         ON race_data(constructor_id);
-CREATE INDEX rcda_driver_number_idx          ON race_data(driver_number);
 
 
--- ============================================
--- RACE DRIVER STANDING
--- ============================================
+-- Race driver standings
 CREATE TABLE race_driver_standing (
-    race_id             INT          NOT NULL,          -- FK to race(id)
-    driver_id           VARCHAR(100) NOT NULL,          -- FK to driver(id)
+    race_id             INT          NOT NULL,          
+    driver_id           VARCHAR(100) NOT NULL,         
 
     position_number     INT          NOT NULL,          
     points              DECIMAL(8,2) NOT NULL,          
@@ -199,22 +179,17 @@ CREATE TABLE race_driver_standing (
     FOREIGN KEY (driver_id) REFERENCES driver(id)
 );
 
--- index to quickly get the full standings for a given race
 CREATE INDEX rds_race_id_idx ON race_driver_standing(race_id);
+CREATE INDEX rds_driver_id_idx ON race_driver_standing(driver_id);
 
--- ============================================
--- RACE CONSTRUCTOR STANDING 
--- ============================================
+-- Race constructor standings
 CREATE TABLE race_constructor_standing (
     race_id            INT          NOT NULL REFERENCES race(id),
     constructor_id     VARCHAR(100) NOT NULL REFERENCES constructor(id),
-
-    -- Non-key
     position_number    INT,
     points             DECIMAL(8,2) NOT NULL,
 
-    -- Composite PK as requested
     PRIMARY KEY (race_id, constructor_id)
 );
--- İhtiyaca göre sorgular:
-CREATE INDEX rcst_position_number_idx ON race_constructor_standing(position_number)
+
+CREATE INDEX rcst_race_id_idx ON race_constructor_standing(race_id);
