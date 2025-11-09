@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>F1 Race Analytics — Welcome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* brighter, punchier palette */
+      --f1-red:#ff1e15; --f1-red-dark:#c20f09;
+      --f1-black:#07090c; --f1-dark:#0b1118;
+      --f1-white:#f6f8fb; --f1-grey:#a9bdd1; --f1-yellow:#ffd038; --f1-green:#00e08d;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;background:radial-gradient(1300px 800px at 18% 8%, #1a2632 0%, #0b0f14 55%, #07090c 100%);
+      color:var(--f1-white);font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial}
+
+    body{margin:0;background:radial-gradient(1200px 700px at 20% 10%, #17212b 0%, #0b0d0f 60%);
+      color:var(--f1-white);font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial}
+
+    /* FULLSCREEN CANVAS */
+    .page{position:relative; width:100vw; min-height:100dvh; overflow:hidden}
+
+    /* NAV */
+    .nav{position:absolute; inset:0 0 auto 0; display:flex; align-items:center; justify-content:space-between;
+         padding:20px clamp(18px,5vw,56px); z-index:10;}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.4px}
+    .brand .logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--f1-red),#8e0200);position:relative}
+    .brand span{font-family:Montserrat,Poppins,sans-serif}
+    .menu{display:flex;gap:clamp(12px,3vw,28px)}
+    .menu a{color:#c7d1db;text-decoration:none;font-weight:600}
+    .menu a:hover{color:white}
+
+    /* HERO LAYOUT */
+    .hero{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:24px;
+          min-height:100dvh;padding:clamp(60px,9vh,90px) clamp(22px,6vw,80px) clamp(18px,6vh,60px);} 
+
+
+    .copy .kicker{color:var(--f1-red);letter-spacing:.28em;font-weight:800;text-transform:uppercase;font-size:clamp(12px,1.1vw,14px)}
+    .copy{position:relative; z-index:3}
+
+    h1{margin:.25rem 0;font-family:Montserrat,sans-serif;font-weight:900;line-height:.92;letter-spacing:.01em;
+       color:#ffffff;font-size:clamp(42px,7.6vw,110px)}
+    .subtitle{color:#c3cdd6;max-width:56ch;font-size:clamp(14px,1.2vw,18px)}
+
+    .cta-row{display:flex;gap:14px;margin-top:26px;align-items:center}
+    .btn{--padY:14px;--padX:26px;--shadow:0 12px 18px rgba(225,6,0,.28),0 2px 6px rgba(0,0,0,.25);
+         background:linear-gradient(180deg,#ff5149,var(--f1-red));color:white;border:none;padding:var(--padY) var(--padX);
+         border-radius:14px;font-weight:800;letter-spacing:.4px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s ease,filter .2s ease}
+    .btn:hover{transform:translateY(-1px);filter:saturate(1.15)}
+    .btn.secondary{background:linear-gradient(180deg,#202b36,#141c24);box-shadow:0 10px 16px rgba(0,0,0,.35)}
+
+    /* BUTTON TRIO */
+    .cta-grid{position:relative; z-index:4; display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:clamp(12px,2vw,22px);margin-top:34px;max-width:860px}
+
+    .pillBtn{display:flex;align-items:center;justify-content:center;gap:12px;text-decoration:none;color:#fff;font-weight:800;
+      padding:20px 24px;border-radius:18px;background:linear-gradient(180deg,var(--f1-red) 0%, var(--f1-red-dark) 100%);
+      box-shadow:0 16px 26px rgba(255,30,21,.28), inset 0 1px 0 #ffb2ae; border:1px solid #7a0a07; transition:transform .15s ease, box-shadow .2s ease, filter .2s ease}
+
+    .pillBtn:hover{transform:translateY(-2px);box-shadow:0 18px 28px rgba(225,6,0,.30), inset 0 1px 0 #ffb1ac}
+    .pillBtn:focus{outline:2px solid #fff; outline-offset:2px}
+    .pillBtn svg{width:22px;height:22px;display:block}
+
+    @media (max-width:780px){
+      .cta-grid{grid-template-columns:1fr}
+    }
+
+    /* RIGHT: F1 VISUAL */
+    .visual{position:relative;min-height:460px;aspect-ratio:1.25/1; z-index:1; display:flex; align-items:center; justify-content:center}
+    /* Photo frame blends better with the UI */
+    .photo-frame{position:relative; width:min(680px, 46vw); aspect-ratio:16/10; border-radius:22px; overflow:hidden;
+      background:radial-gradient(140% 120% at 70% 30%, #0c1117 0%, #0b0f14 60%, #07090c 100%);
+      box-shadow:0 18px 36px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06) inset}
+    .photo-frame::before{content:""; position:absolute; inset:0; pointer-events:none;
+      /* brand-colored glaze for harmony */
+      background:linear-gradient(12deg, rgba(255,30,21,.35) 0%, rgba(0,224,141,.12) 55%, rgba(10,14,18,.0) 85%);
+      mix-blend-mode:soft-light;}
+    .photo-frame::after{content:""; position:absolute; inset:0; pointer-events:none; 
+      background:radial-gradient(120% 100% at 50% 110%, rgba(0,0,0,.55), transparent 45%),
+                 linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,.0) 40%);
+    }
+    .hero-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:60% center;
+      filter:contrast(1.06) saturate(1.08) hue-rotate(-4deg); transform:scale(1.02)}
+    .photo-glow{position:absolute; inset:auto 6% -14% 6%; height:20%; border-radius:50%; filter:blur(26px);
+      background:linear-gradient(90deg, rgba(255,30,21,.55), rgba(0,224,141,.0)); z-index:-1}
+
+    .hero-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:right center; filter:drop-shadow(0 24px 34px rgba(0,0,0,.45));}
+
+
+    /* Curved track */
+    .track{position:absolute;inset:auto -15% -10% auto;width:120%;height:70%;transform:rotate(-9deg);
+      background:radial-gradient(120% 120% at 50% 50%, transparent 48%, #0f151c 49% 69%, transparent 70% 100%);
+      filter:drop-shadow(0 16px 28px rgba(0,0,0,.55));
+    }
+    .track::before{content:"";position:absolute;inset:0;background:
+      repeating-linear-gradient(90deg, transparent 0 24px, white 24px 30px, transparent 30px 54px);
+      mask:
+        radial-gradient(120% 120% at 50% 50%, transparent 45%, #000 46% 72%, transparent 73%);
+      opacity:.9}
+
+    /* Checkered flag */
+    .flag{position:absolute;right:8%;top:8%;width:min(280px,36vw);height:min(180px,24vw);transform:skewX(-10deg) rotate(-2deg);
+      background:
+        repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0/40px 40px;
+      border-radius:10px;box-shadow:0 14px 24px rgba(0,0,0,.45);}
+    .flag::after{content:"";position:absolute;left:-10px;top:-10px;width:10px;height:calc(100% + 20px);background:#202830;border-top-left-radius:6px;border-bottom-left-radius:6px}
+
+    /* Simple F1 car silhouette (SVG) */
+    .car{position:absolute;right:6%;bottom:8%;width:min(520px,42vw)}
+    .car svg{width:100%;height:auto;display:block}
+    .car .body{fill:#d3dbe3}
+    .car .nose{fill:#E10600}
+    .car .tyre{fill:#0b0d0f}
+    .car .rim{fill:#b5c4d3}
+
+    /* Decorative left stripes (different from your reference) */
+    .stripes{position:absolute;left:-12vw;top:58%;width:70vw;height:22vh;transform:rotate(-18deg); z-index:0;
+      background:linear-gradient(90deg,#ff1e15 0 20%,#ffd038 20% 36%,#00e08d 36% 52%,#a9bdd1 52% 68%,#ffffff22 68% 100%);
+      filter:blur(.3px) drop-shadow(0 18px 26px rgba(0,0,0,.35));opacity:.95}
+
+    @media (max-width:980px){
+      .hero{grid-template-columns:1fr}
+      .menu{display:none}
+      .flag{right:6%;top:10%}
+      .car{right:2%;bottom:6%}
+    }
+  </style>
+</head>
+<body>
+  <main class="page" role="main">
+    <header class="nav" aria-label="Primary">
+      <div class="brand" aria-label="F1 Race Analytics">
+        <div class="logo" aria-hidden="true"></div>
+        <span>F1 Race Analytics</span>
+      </div>
+      <nav class="menu" aria-label="Main menu">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#data">Data</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <section class="hero" id="home">
+      <div class="copy">
+        <div class="kicker">DATA • STRATEGY • SPEED</div>
+        <h1>Welcome!</h1>
+        <p class="subtitle">Examine past Formula 1 races, learn about teams and drivers, or upload your own simulation results and compare them with real data.</p>
+        <div class="cta-grid">
+          <a class="pillBtn" href="#constructors" aria-label="Constructors">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 13l6-6 8 8" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M16 3l5 5-7 7-5-5 7-7z" fill="#ffffff33"/></svg>
+            <span>Constructors</span>
+          </a>
+          <a class="pillBtn" href="#drivers" aria-label="Drivers">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 12a4 4 0 100-8 4 4 0 000 8z" fill="#fff" opacity=".9"/><path d="M4 21a8 8 0 1116 0H4z" fill="#fff" opacity=".45"/></svg>
+            <span>Drivers</span>
+          </a>
+          <a class="pillBtn" href="#races" aria-label="Races">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" fill="#fff" opacity=".9"/><path d="M8 4v16M16 4v16" stroke="#000" opacity=".22"/><rect x="6" y="7" width="4" height="3" fill="#000" opacity=".25"/><rect x="14" y="11" width="4" height="3" fill="#000" opacity=".25"/></svg>
+            <span>Races</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="visual">
+        <div class="photo-frame">
+          <!-- KENDİ FOTOĞRAFIN: src'yi değiştir -->
+          <img class="hero-photo" src="f1.avif" alt="Formula 1 aracı" />
+        </div>
+        <div class="photo-glow" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <div class="stripes" aria-hidden="true"></div>
+  </main>
+</body>
+</html>
