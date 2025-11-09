@@ -2,6 +2,7 @@
 Database connection management using psycopg2
 """
 import psycopg2
+import psycopg2.extras
 from psycopg2 import pool
 from app.config import Config
 
@@ -28,55 +29,28 @@ def init_db():
         raise
 
 def get_db_connection():
-    """
-    Get a connection from the pool
-    Remember to call release_db_connection() when done!
-    """
-    if db_pool:
-        return db_pool.getconn()
-    raise Exception("Database pool not initialized")
+    """Get a database connection from the pool"""
+    connection = db_pool.getconn()
+    return connection
 
-def release_db_connection(connection):
-    """Return a connection to the pool"""
-    if db_pool and connection:
-        db_pool.putconn(connection)
-
-def execute_query(query, params=None, fetch=True):
-    """
-    Execute a SQL query with automatic connection management
+class DatabaseConnection:
+    """Database connection wrapper"""
+    def __init__(self):
+        self.conn = get_db_connection()
+        self.cursor = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
-    Args:
-        query: SQL query string
-        params: Query parameters (tuple or dict)
-        fetch: If True, return results; if False, commit changes
+    def execute(self, query, params=None):
+        return self.cursor.execute(query, params)
     
-    Returns:
-        Query results if fetch=True, else None
-    """
-    connection = None
-    cursor = None
+    def fetchone(self):
+        return self.cursor.fetchone()
+        
+    def commit(self):
+        self.conn.commit()
     
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        
-        cursor.execute(query, params)
-        
-        if fetch:
-            results = cursor.fetchall()
-            return results
-        else:
-            connection.commit()
-            return cursor.rowcount
-            
-    except (Exception, psycopg2.Error) as error:
-        if connection:
-            connection.rollback()
-        print(f"Database error: {error}")
-        raise
-        
-    finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            release_db_connection(connection)
+    def close(self):
+        """Close cursor and return connection to the pool"""
+        if self.cursor:
+            self.cursor.close()
+        if self.conn:
+            db_pool.putconn(self.conn)

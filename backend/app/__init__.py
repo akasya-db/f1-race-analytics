@@ -9,11 +9,12 @@ def create_app():
     """Create and configure Flask application"""
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.secret_key = Config.SECRET_KEY  # Explicitly set secret key
     
-    # Enable CORS for frontend communication
+    # Enable CORS for all routes
     CORS(app, resources={
-        r"/api/*": {
-            "origins": ["http://localhost:8080", "http://127.0.0.1:8080"],
+        r"/*": {
+            "origins": ["http://localhost:5000", "http://127.0.0.1:5000"],
             "methods": ["GET", "POST", "PUT", "DELETE"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
@@ -27,5 +28,9 @@ def create_app():
     @app.route('/health')
     def health_check():
         return {'status': 'ok', 'message': 'F1 Analytics API is running'}
+    
+    # Register blueprints
+    from app.routes.auth import auth_bp
+    app.register_blueprint(auth_bp)
     
     return app
