@@ -6,6 +6,23 @@ from app.database import DatabaseConnection
 
 auth_bp = Blueprint('auth', __name__)
 
+@auth_bp.route('/')
+def index():
+    """
+    Index page that serves both authenticated and non-authenticated users
+    If user is logged in, shows dashboard
+    If user is not logged in, shows landing page with login/register options
+    """
+    if 'username' in session:
+        # User is logged in, show dashboard
+        return render_template('index.html', 
+                             authenticated=True,
+                             username=session['username'],
+                             email=session['email'])
+    else:
+        # User is not logged in, show landing page
+        return render_template('index.html', authenticated=False)
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -51,17 +68,16 @@ def login():
                 session['username'] = user['username']
                 session['email'] = user['email']
                 flash('Login successful!')
-                return redirect(url_for('auth.welcome'))
+                return redirect(url_for('auth.index'))
             else:
                 flash('Invalid username or password.')
         finally:
             db.close()
     return render_template('login.html')
 
-@auth_bp.route('/welcome')
-def welcome():
-    if 'username' not in session:
-        return redirect(url_for('auth.login'))
-    return render_template('welcome.html', 
-                        username=session['username'],
-                        email=session['email'])
+@auth_bp.route('/logout')
+def logout():
+    """Logout user and clear session"""
+    session.clear()
+    flash('You have been logged out successfully.')
+    return redirect(url_for('auth.index'))

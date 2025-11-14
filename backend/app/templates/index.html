@@ -31,9 +31,31 @@
     .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.4px}
     .brand .logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--f1-red),#8e0200);position:relative}
     .brand span{font-family:Montserrat,Poppins,sans-serif}
-    .menu{display:flex;gap:clamp(12px,3vw,28px)}
+    .menu{display:flex;gap:clamp(12px,3vw,28px);align-items:center}
     .menu a{color:#c7d1db;text-decoration:none;font-weight:600}
     .menu a:hover{color:white}
+
+    /* User Dropdown */
+    .user-dropdown{position:relative;display:inline-block}
+    .user-dropdown-toggle{display:flex;align-items:center;gap:8px;color:var(--f1-yellow);font-weight:700;
+      cursor:pointer;padding:8px 12px;border-radius:8px;transition:background .2s ease}
+    .user-dropdown-toggle:hover{background:rgba(255,208,56,.15)}
+    .user-dropdown-toggle svg{width:20px;height:20px;transition:transform .2s ease}
+    .user-dropdown.open .user-dropdown-toggle svg{transform:rotate(180deg)}
+    
+    .dropdown-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:200px;
+      background:linear-gradient(135deg,#1a2632,#0f1820);border-radius:12px;
+      box-shadow:0 8px 24px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.08);
+      opacity:0;visibility:hidden;transform:translateY(-10px);
+      transition:opacity .2s ease, transform .2s ease, visibility .2s;z-index:1000}
+    .user-dropdown.open .dropdown-menu{opacity:1;visibility:visible;transform:translateY(0)}
+    
+    .dropdown-menu a{display:flex;align-items:center;gap:10px;padding:12px 16px;
+      color:#c7d1db;text-decoration:none;font-weight:600;transition:background .2s ease, color .2s ease}
+    .dropdown-menu a:hover{background:rgba(255,30,21,.15);color:white}
+    .dropdown-menu a:first-child{border-radius:12px 12px 0 0}
+    .dropdown-menu a:last-child{border-radius:0 0 12px 12px}
+    .dropdown-menu svg{width:18px;height:18px}
 
     /* HERO LAYOUT */
     .hero{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:24px;
@@ -44,8 +66,8 @@
     .copy{position:relative; z-index:3}
 
     h1{margin:.25rem 0;font-family:Montserrat,sans-serif;font-weight:900;line-height:.92;letter-spacing:.01em;
-       color:#ffffff;font-size:clamp(42px,7.6vw,110px)}
-    .subtitle{color:#c3cdd6;max-width:56ch;font-size:clamp(14px,1.2vw,18px)}
+       color:#ffffff;font-size:clamp(42px,7.6vw,110px);text-shadow:0 4px 12px rgba(0,0,0,.7), 0 2px 4px rgba(0,0,0,.5)}
+    .subtitle{color:#e8eff6;max-width:56ch;font-size:clamp(14px,1.2vw,18px);text-shadow:0 2px 8px rgba(0,0,0,.8), 0 1px 3px rgba(0,0,0,.6);line-height:1.6}
 
     .cta-row{display:flex;gap:14px;margin-top:26px;align-items:center}
     .btn{--padY:14px;--padX:26px;--shadow:0 12px 18px rgba(225,6,0,.28),0 2px 6px rgba(0,0,0,.25);
@@ -88,7 +110,7 @@
     .photo-glow{position:absolute; inset:auto 6% -14% 6%; height:20%; border-radius:50%; filter:blur(26px);
       background:linear-gradient(90deg, rgba(255,30,21,.55), rgba(0,224,141,.0)); z-index:-1}
 
-    .hero-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:right center; filter:drop-shadow(0 24px 34px rgba(0,0,0,.45));}
+    .hero-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center center; filter:drop-shadow(0 24px 34px rgba(0,0,0,.45)); border-radius:22px;}
 
 
     /* Curved track */
@@ -128,9 +150,53 @@
       .flag{right:6%;top:10%}
       .car{right:2%;bottom:6%}
     }
+
+    /* Flash Messages */
+    .flash-messages{position:fixed;top:80px;right:20px;z-index:100;max-width:400px}
+    .flash-message{background:linear-gradient(135deg,var(--f1-green),#00b06f);color:#fff;padding:16px 20px;
+      border-radius:12px;margin-bottom:12px;box-shadow:0 8px 16px rgba(0,224,141,.3);
+      animation:slideIn .3s ease, fadeOut .3s ease 3.7s forwards;font-weight:600}
+    @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes fadeOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
   </style>
 </head>
 <body>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for message in messages %}
+          <div class="flash-message">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <script>
+    // Auto-remove flash messages after 4 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(function(message) {
+        setTimeout(function() {
+          message.remove();
+        }, 4000);
+      });
+    });
+
+    // Toggle dropdown menu
+    function toggleDropdown() {
+      const dropdown = document.querySelector('.user-dropdown');
+      dropdown.classList.toggle('open');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const dropdown = document.querySelector('.user-dropdown');
+      if (dropdown && !dropdown.contains(event.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+  </script>
+
   <main class="page" role="main">
     <header class="nav" aria-label="Primary">
       <div class="brand" aria-label="F1 Race Analytics">
@@ -138,39 +204,85 @@
         <span>F1 Race Analytics</span>
       </div>
       <nav class="menu" aria-label="Main menu">
-        <a href="#home">Home</a>
-        <a href="#about">About</a>
-        <a href="#gallery">Gallery</a>
-        <a href="#data">Data</a>
-        <a href="#contact">Contact</a>
+        {% if authenticated %}
+          <a href="{{ url_for('auth.index') }}">Dashboard</a>
+          <div class="user-dropdown">
+            <div class="user-dropdown-toggle" onclick="toggleDropdown()">
+              <span>{{ username }}</span>
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="dropdown-menu">
+              <a href="#profile">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Profile</span>
+              </a>
+              <a href="{{ url_for('auth.logout') }}">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Logout</span>
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}">Login</a>
+          <a href="{{ url_for('auth.register') }}">Register</a>
+        {% endif %}
       </nav>
     </header>
 
     <section class="hero" id="home">
       <div class="copy">
-        <div class="kicker">DATA • STRATEGY • SPEED</div>
-        <h1>Welcome!</h1>
-        <p class="subtitle">Examine past Formula 1 races, learn about teams and drivers, or upload your own simulation results and compare them with real data.</p>
-        <div class="cta-grid">
-          <a class="pillBtn" href="#constructors" aria-label="Constructors">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 13l6-6 8 8" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M16 3l5 5-7 7-5-5 7-7z" fill="#ffffff33"/></svg>
-            <span>Constructors</span>
-          </a>
-          <a class="pillBtn" href="#drivers" aria-label="Drivers">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 12a4 4 0 100-8 4 4 0 000 8z" fill="#fff" opacity=".9"/><path d="M4 21a8 8 0 1116 0H4z" fill="#fff" opacity=".45"/></svg>
-            <span>Drivers</span>
-          </a>
-          <a class="pillBtn" href="#races" aria-label="Races">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" fill="#fff" opacity=".9"/><path d="M8 4v16M16 4v16" stroke="#000" opacity=".22"/><rect x="6" y="7" width="4" height="3" fill="#000" opacity=".25"/><rect x="14" y="11" width="4" height="3" fill="#000" opacity=".25"/></svg>
-            <span>Races</span>
-          </a>
-        </div>
+        {% if authenticated %}
+          <!-- Authenticated User View -->
+          <div class="kicker">WELCOME BACK</div>
+          <h1>Hello, {{ username }}!</h1>
+          <p class="subtitle">Your personalized F1 analytics dashboard. Access race data, driver statistics, and team performance metrics all in one place.</p>
+          <div class="cta-grid">
+            <a class="pillBtn" href="#constructors" aria-label="Constructors">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 13l6-6 8 8" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M16 3l5 5-7 7-5-5 7-7z" fill="#ffffff33"/></svg>
+              <span>Constructors</span>
+            </a>
+            <a class="pillBtn" href="#drivers" aria-label="Drivers">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 12a4 4 0 100-8 4 4 0 000 8z" fill="#fff" opacity=".9"/><path d="M4 21a8 8 0 1116 0H4z" fill="#fff" opacity=".45"/></svg>
+              <span>Drivers</span>
+            </a>
+            <a class="pillBtn" href="#races" aria-label="Races">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" fill="#fff" opacity=".9"/><path d="M8 4v16M16 4v16" stroke="#000" opacity=".22"/><rect x="6" y="7" width="4" height="3" fill="#000" opacity=".25"/><rect x="14" y="11" width="4" height="3" fill="#000" opacity=".25"/></svg>
+              <span>Races</span>
+            </a>
+          </div>
+        {% else %}
+          <!-- Non-authenticated User View -->
+          <div class="kicker">DATA • STRATEGY • SPEED</div>
+          <h1>Welcome!</h1>
+          <p class="subtitle">Examine past Formula 1 races, learn about teams and drivers, or upload your own simulation results and compare them with real data.</p>
+          <div class="cta-grid">
+            <a class="pillBtn" href="{{ url_for('auth.register') }}" aria-label="Get Started">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 12a4 4 0 100-8 4 4 0 000 8z" fill="#fff" opacity=".9"/><path d="M4 21a8 8 0 1116 0H4z" fill="#fff" opacity=".45"/></svg>
+              <span>Get Started</span>
+            </a>
+            <a class="pillBtn" href="{{ url_for('auth.login') }}" aria-label="Login">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+              <span>Login</span>
+            </a>
+            <a class="pillBtn" href="#about" aria-label="Learn More">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#fff" opacity=".9"/><path d="M12 16v-4M12 8h.01" stroke="#000" stroke-width="2" stroke-linecap="round"/></svg>
+              <span>Learn More</span>
+            </a>
+          </div>
+        {% endif %}
       </div>
 
       <div class="visual">
         <div class="photo-frame">
           <!-- KENDİ FOTOĞRAFIN: src'yi değiştir -->
-          <img class="hero-photo" src="f1.avif" alt="Formula 1 aracı" />
+          <img class="hero-photo" src="../static/img/f1.avif" alt="Formula 1 aracı" />
         </div>
         <div class="photo-glow" aria-hidden="true"></div>
       </div>
