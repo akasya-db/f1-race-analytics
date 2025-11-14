@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Races — F1 Race Analytics</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+
+  <!-- Aynı tasarımı kullanıyoruz -->
+  <link rel="stylesheet" href="/static/css/listing.css"/>
+</head>
+
+<body>
+  <div class="hero-banner">
+    <div class="hero-content">
+      <h1 class="hero-title">F1 Races</h1>
+      <p class="hero-subtitle">
+        Explore the Formula 1 race calendar, iconic circuits, and key stats for each Grand Prix weekend.
+      </p>
+      <p class="hero-description">
+        Browse all races on the calendar, compare track characteristics, and dive into details like laps, distance, and more.
+      </p>
+    </div>
+  </div>
+
+  <div class="content-wrapper">
+    <!-- JS burayı dolduracak -->
+    <div class="grid" id="racesGrid"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="raceModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeRaceModal()">×</button>
+      <div class="modal-header">
+        <img class="modal-logo" id="modalFlag" src="/placeholder.svg" alt="Circuit Image"/>
+        <div>
+          <h2 class="modal-title" id="modalTitle"></h2>
+          <p class="modal-subtitle" id="modalSubtitle"></p>
+        </div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/races.js"></script>
+</body>
+</html>
