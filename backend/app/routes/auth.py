@@ -37,31 +37,31 @@ def register():
             db.close()
     return render_template('register.html')
 
-    @auth_bp.route('/login', methods=['GET', 'POST'])
-    def login():
-        if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
-            db = DatabaseConnection()
-            try:
-                db.execute('SELECT * FROM "user" WHERE username = %s', (username,))
-                user = db.fetchone()
-                if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
-                    session['user_id'] = user['id']
-                    session['username'] = user['username']
-                    session['email'] = user['email']
-                    flash('Login successful!')
-                    return redirect(url_for('auth.welcome'))
-                else:
-                    flash('Invalid username or password.')
-            finally:
-                db.close()
-        return render_template('login.html')
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        db = DatabaseConnection()
+        try:
+            db.execute('SELECT * FROM "user" WHERE username = %s', (username,))
+            user = db.fetchone()
+            if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                session['email'] = user['email']
+                flash('Login successful!')
+                return redirect(url_for('auth.welcome'))
+            else:
+                flash('Invalid username or password.')
+        finally:
+            db.close()
+    return render_template('login.html')
 
-    @auth_bp.route('/welcome')
-    def welcome():
-        if 'username' not in session:
-            return redirect(url_for('auth.login'))
-        return render_template('welcome.html', 
-                            username=session['username'],
-                            email=session['email'])
+@auth_bp.route('/welcome')
+def welcome():
+    if 'username' not in session:
+        return redirect(url_for('auth.login'))
+    return render_template('welcome.html', 
+                        username=session['username'],
+                        email=session['email'])
