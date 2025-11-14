@@ -3,8 +3,14 @@ Configuration settings for Flask application
 """
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Try loading repo/database/.env first, fallback to default behavior
+dotenv_path = Path(__file__).resolve().parents[2] / 'database' / '.env'
+if dotenv_path.exists():
+    load_dotenv(dotenv_path)
+else:
+    load_dotenv()
 
 class Config:
     """Application configuration"""

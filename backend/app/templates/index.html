@@ -244,7 +244,7 @@
           <h1>Hello, {{ username }}!</h1>
           <p class="subtitle">Your personalized F1 analytics dashboard. Access race data, driver statistics, and team performance metrics all in one place.</p>
           <div class="cta-grid">
-            <a class="pillBtn" href="#constructors" aria-label="Constructors">
+            <a class="pillBtn" href="{{ url_for('constructors.constructors_page') }}" aria-label="Constructors">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 13l6-6 8 8" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M16 3l5 5-7 7-5-5 7-7z" fill="#ffffff33"/></svg>
               <span>Constructors</span>
             </a>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Constructors — F1 Race Analytics</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/css/listing.css"/>
+</head>
+
+<body>
+  <div class="hero-banner">
+    <div class="hero-content">
+      <h1 class="hero-title">F1 Constructors</h1>
+      <p class="hero-subtitle">
+        Explore all Formula 1 teams, compare performance, and dive into the constructors behind the fastest cars in the world.
+      </p>
+    </div>
+  </div>
+
+  <div class="content-wrapper">
+    <div class="grid" id="constructorsGrid"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="teamModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-header">
+        <img class="modal-logo" id="modalLogo" src="/placeholder.svg" alt="Team Logo"/>
+        <div>
+          <h2 class="modal-title" id="modalTitle"></h2>
+          <p class="modal-subtitle" id="modalSubtitle"></p>
+        </div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/constructors.js"></script>
+
+</body>
+</html>
