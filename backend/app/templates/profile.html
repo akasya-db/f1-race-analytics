@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile | F1 Race Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/listing.css') }}">
+  <style>
+    :root{
+      --f1-red:#ff1e15; --f1-red-dark:#c20f09;
+      --f1-black:#07090c; --f1-dark:#0b1118;
+      --f1-white:#f6f8fb; --f1-grey:#a9bdd1; --f1-yellow:#ffd038; --f1-green:#00e08d;
+    }
+
+    .profile-container{
+      max-width:900px;
+      margin:0 auto;
+      padding:40px clamp(16px,4vw,60px);
+    }
+
+    .profile-header{
+      background:linear-gradient(135deg, rgba(255,30,21,0.15) 0%, rgba(194,15,9,0.08) 40%, transparent 70%),
+                 linear-gradient(to right, #0f151c 0%, #1a2128 50%, #0d1116 100%);
+      border-radius:20px;
+      padding:40px;
+      margin-bottom:30px;
+      border:1px solid rgba(255,30,21,.2);
+      box-shadow:0 14px 24px rgba(0,0,0,.45);
+    }
+
+    .profile-header h1{
+      font-family:Montserrat;
+      font-size:clamp(32px,4vw,48px);
+      font-weight:900;
+      margin:0 0 8px 0;
+      background:linear-gradient(to right, var(--f1-white) 0%, var(--f1-grey) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+
+    .profile-header p{
+      color:var(--f1-grey);
+      margin:0;
+      font-size:16px;
+    }
+
+    .profile-card{
+      background:#0f151c;
+      border-radius:18px;
+      padding:32px;
+      margin-bottom:24px;
+      box-shadow:0 14px 24px rgba(0,0,0,.45);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .profile-card h2{
+      font-family:Montserrat;
+      font-size:24px;
+      font-weight:800;
+      margin:0 0 24px 0;
+      color:var(--f1-white);
+      position:relative;
+      padding-bottom:12px;
+    }
+
+    .profile-card h2::after{
+      content:'';
+      position:absolute;
+      bottom:0;
+      left:0;
+      width:80px;
+      height:3px;
+      background:linear-gradient(90deg, var(--f1-red), transparent);
+      transform:skewX(-15deg);
+    }
+
+    .form-group{
+      margin-bottom:24px;
+    }
+
+    .form-group label{
+      display:block;
+      font-weight:600;
+      margin-bottom:8px;
+      color:var(--f1-white);
+      font-size:14px;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+
+    .form-group input,
+    .form-group select{
+      width:100%;
+      padding:14px 16px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(0,0,0,.3);
+      color:var(--f1-white);
+      font-size:15px;
+      font-family:Poppins;
+      transition:border-color .2s ease, box-shadow .2s ease;
+      box-sizing:border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus{
+      outline:none;
+      border-color:var(--f1-red);
+      box-shadow:0 0 0 3px rgba(255,30,21,.15);
+    }
+
+    .form-group input::placeholder{
+      color:var(--f1-grey);
+      opacity:0.6;
+    }
+
+    .form-group select{
+      cursor:pointer;
+    }
+
+    .form-group select option{
+      background:#0f151c;
+      color:var(--f1-white);
+    }
+
+    .btn-group{
+      display:flex;
+      gap:16px;
+      margin-top:32px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      padding:14px 28px;
+      border-radius:12px;
+      font-weight:800;
+      letter-spacing:.6px;
+      transition:filter .2s ease, transform .15s ease;
+      border:none;
+      cursor:pointer;
+      font-size:14px;
+      font-family:Poppins;
+      text-decoration:none;
+      display:inline-block;
+      text-align:center;
+    }
+
+    .btn-primary{
+      background:linear-gradient(180deg,#ff5149,var(--f1-red));
+      color:white;
+      box-shadow:0 8px 16px rgba(255,30,21,.3);
+    }
+
+    .btn-primary:hover{
+      transform:translateY(-2px);
+      filter:saturate(1.2) brightness(1.1);
+      box-shadow:0 12px 20px rgba(255,30,21,.4);
+    }
+
+    .btn-danger{
+      background:linear-gradient(180deg,#c20f09,#8a0a06);
+      color:white;
+      box-shadow:0 8px 16px rgba(194,15,9,.3);
+    }
+
+    .btn-danger:hover{
+      transform:translateY(-2px);
+      filter:saturate(1.2) brightness(1.1);
+      box-shadow:0 12px 20px rgba(194,15,9,.4);
+    }
+
+    .btn-secondary{
+      background:linear-gradient(180deg,#202b36,#141c24);
+      color:var(--f1-white);
+      box-shadow:0 8px 16px rgba(0,0,0,.35);
+    }
+
+    .btn-secondary:hover{
+      transform:translateY(-2px);
+      filter:brightness(1.1);
+    }
+
+    .info-text{
+      color:var(--f1-grey);
+      font-size:13px;
+      margin-top:6px;
+      line-height:1.5;
+    }
+
+    .delete-section{
+      border-top:2px solid rgba(255,30,21,.2);
+      padding-top:32px;
+      margin-top:32px;
+    }
+
+    .delete-section h3{
+      font-family:Montserrat;
+      font-size:20px;
+      font-weight:800;
+      margin:0 0 16px 0;
+      color:var(--f1-red);
+    }
+
+    .delete-section p{
+      color:var(--f1-grey);
+      font-size:14px;
+      margin-bottom:20px;
+      line-height:1.6;
+    }
+
+    .nav{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:20px clamp(18px,5vw,56px);
+      z-index:10;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:900;
+      letter-spacing:.4px;
+      color:var(--f1-white);
+      text-decoration:none;
+      font-family:Montserrat,Poppins,sans-serif;
+    }
+
+    .brand .logo{
+      width:34px;
+      height:34px;
+      border-radius:8px;
+      background:linear-gradient(135deg,var(--f1-red),#8e0200);
+      position:relative;
+    }
+
+    .menu{
+      display:flex;
+      gap:clamp(12px,3vw,28px);
+      align-items:center;
+    }
+
+    .menu a{
+      color:#c7d1db;
+      text-decoration:none;
+      font-weight:600;
+    }
+
+    .menu a:hover{
+      color:white;
+    }
+
+    .flash-messages{
+      position:fixed;
+      top:80px;
+      right:20px;
+      z-index:100;
+      max-width:400px;
+    }
+
+    .flash-message{
+      background:linear-gradient(135deg,var(--f1-green),#00b06f);
+      color:#fff;
+      padding:16px 20px;
+      border-radius:12px;
+      margin-bottom:12px;
+      box-shadow:0 8px 16px rgba(0,224,141,.3);
+      animation:slideIn .3s ease, fadeOut .3s ease 3.7s forwards;
+      font-weight:600;
+    }
+
+    .flash-message.error{
+      background:linear-gradient(135deg,var(--f1-red),#c20f09);
+      box-shadow:0 8px 16px rgba(255,30,21,.3);
+    }
+
+    @keyframes slideIn{
+      from{transform:translateX(100%);opacity:0}
+      to{transform:translateX(0);opacity:1}
+    }
+
+    @keyframes fadeOut{
+      from{transform:translateX(0);opacity:1}
+      to{transform:translateX(100%);opacity:0}
+    }
+
+    @media (max-width: 600px){
+      .profile-card{
+        padding:24px;
+      }
+
+      .btn-group{
+        flex-direction:column;
+      }
+
+      .btn{
+        width:100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for message in messages %}
+          <div class="flash-message {% if 'failed' in message|lower or 'incorrect' in message|lower or 'error' in message|lower or 'already taken' in message|lower %}error{% endif %}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <header class="nav" aria-label="Primary">
+    <a href="{{ url_for('auth.index') }}" class="brand" aria-label="F1 Race Analytics">
+      <div class="logo" aria-hidden="true"></div>
+      <span>F1 Race Analytics</span>
+    </a>
+    <nav class="menu" aria-label="Main menu">
+      <a href="{{ url_for('auth.index') }}">Dashboard</a>
+      <a href="{{ url_for('constructors.constructors_page') }}">Constructors</a>
+      <a href="{{ url_for('drivers.drivers_page') }}">Drivers</a>
+      <a href="{{ url_for('races.races_page') }}">Races</a>
+      <a href="{{ url_for('auth.logout') }}">Logout</a>
+    </nav>
+  </header>
+
+  <div class="profile-container">
+    <div class="profile-header">
+      <h1>Profile Settings</h1>
+      <p>Manage your account information and preferences</p>
+      {% if user.date_joined %}
+      <p style="margin-top:12px; font-size:14px; opacity:0.8;">Member since {{ user.date_joined.strftime('%B %d, %Y') }}</p>
+      {% endif %}
+    </div>
+
+    <form action="{{ url_for('auth.update_profile') }}" method="POST" class="profile-card">
+      <h2>Account Information</h2>
+      
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" value="{{ user.username }}" required />
+        <p class="info-text">Your unique username. This will be visible to others.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ user.email }}" required />
+        <p class="info-text">Your email address for account recovery and notifications.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="country_id">Country</label>
+        <select id="country_id" name="country_id">
+          <option value="">Select a country</option>
+          {% for country in countries %}
+            <option value="{{ country.id }}" {% if user.country_id == country.id %}selected{% endif %}>
+              {{ country.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <p class="info-text">Your country of residence (optional).</p>
+      </div>
+
+      <div class="btn-group">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{{ url_for('auth.index') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+
+    <form action="{{ url_for('auth.update_profile') }}" method="POST" class="profile-card">
+      <h2>Change Password</h2>
+      
+      <div class="form-group">
+        <label for="current_password">Current Password</label>
+        <input type="password" id="current_password" name="current_password" placeholder="Enter your current password" />
+        <p class="info-text">Required only if you want to change your password.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="new_password">New Password</label>
+        <input type="password" id="new_password" name="new_password" placeholder="Enter your new password" />
+        <p class="info-text">Leave empty if you don't want to change your password.</p>
+      </div>
+
+      <div class="btn-group">
+        <button type="submit" class="btn btn-primary">Update Password</button>
+      </div>
+    </form>
+
+    <div class="profile-card delete-section">
+      <h3>Delete Account</h3>
+      <p>Once you delete your account, there is no going back. Please be certain. You will need to enter your password to confirm account deletion.</p>
+      
+      <form action="{{ url_for('auth.delete_account') }}" method="POST" id="delete-form">
+        <div class="form-group">
+          <label for="delete_password">Password</label>
+          <input type="password" id="delete_password" name="password" placeholder="Enter your password to confirm" required />
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">Delete Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Auto-remove flash messages after 4 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(function(message) {
+        setTimeout(function() {
+          message.remove();
+        }, 4000);
+      });
+    });
+  </script>
+</body>
+</html>
+
