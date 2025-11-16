@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Drivers — F1 Race Analytics</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <!-- Ortak stil -->
+  <link rel="stylesheet" href="/static/css/listing.css"/>
+</head>
+
+<body>
+  <!-- Hero -->
+  <div class="hero-banner">
+    <div class="hero-content">
+      <h1 class="hero-title">F1 Drivers</h1>
+      <p class="hero-subtitle">
+        Explore current Formula 1 drivers, compare performance, and dive into detailed profiles with wins, poles, and podium stats.
+      </p>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="content-wrapper">
+    <div class="grid" id="driversGrid"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="driverModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeDriverModal()">×</button>
+
+      <div class="modal-header">
+        <!-- Ortak CSS ile uyum için sınıf adlarını koruyoruz -->
+        <img class="modal-logo" id="driverModalPhoto" src="/placeholder.svg" alt="Driver Photo"/>
+        <div>
+          <h2 class="modal-title" id="driverModalTitle"></h2>
+          <p class="modal-subtitle" id="driverModalSubtitle"></p>
+        </div>
+      </div>
+
+      <div class="modal-body" id="driverModalBody"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/drivers.js"></script>
+</body>
+</html>

@@ -33,9 +33,11 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.constructors import constructors_bp
     from app.routes.races import races_bp
+    from app.routes.drivers import drivers_bp   
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(constructors_bp)
     app.register_blueprint(races_bp)
+    app.register_blueprint(drivers_bp)
 
     return app
