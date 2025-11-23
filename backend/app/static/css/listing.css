@@ -41,6 +41,9 @@
       border-bottom:3px solid rgba(255,30,21,0.3);
       overflow:hidden;
       margin-bottom: 40px;
+      display:flex;
+      align-items:center; /* vertically center hero content inside banner */
+      padding-top:12px; /* small vertical offset so hero sits a bit lower under navbar */
     }
 
     .hero-banner::before{
@@ -84,12 +87,15 @@
       position:relative;
       z-index:2;
       max-width:1400px;
-      margin:-100px auto;
-      padding:60px clamp(16px,4vw,60px) 10px; /* adjusted padding for smaller banner */
+  /* keep vertically centered via .hero-banner, but keep horizontal position aligned with page content */
+  margin:0 0 0 clamp(16px,4vw,60px);
+      padding:24px clamp(16px,4vw,60px);
       display:flex;
       flex-direction:column;
-      justify-content:flex-end;
-      height: 100%;
+      justify-content:center;
+      height:100%;
+      align-items:flex-start;
+      text-align:left;
     }
 
     .hero-title{
@@ -353,6 +359,8 @@
       max-width:800px;
       width:100%;
       padding:40px;
+      max-height:calc(100vh - 80px);
+      overflow:auto;
       position:relative;
       border:1px solid rgba(255,30,21,.2);
       box-shadow:0 30px 60px rgba(0,0,0,.6);
@@ -365,15 +373,16 @@
     }
 
     .modal-close{
+      /* anchor to the modal content's top-right corner */
       position:absolute;
-      top:20px;
-      right:20px;
-      background:rgba(255,255,255,.1);
+      top:16px;
+      right:16px;
+      background:rgba(255,255,255,.06);
       border:none;
       color:var(--f1-white);
       font-size:28px;
-      width:40px;
-      height:40px;
+      width:44px;
+      height:44px;
       border-radius:50%;
       cursor:pointer;
       transition:background .2s ease, transform .2s ease;
@@ -381,6 +390,8 @@
       align-items:center;
       justify-content:center;
       line-height:1;
+      z-index:1100;
+      box-shadow:0 6px 18px rgba(0,0,0,0.6);
     }
 
     .modal-close:hover{
@@ -424,6 +435,147 @@
       flex-direction:column;
       gap:24px;
     }
+
+    /* Modal info grid: description + small iconized stats */
+    .modal-info-grid{
+      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap:20px;
+      align-items:start;
+    }
+
+    .modal-desc .modal-description{
+      font-size:15px;
+      color:#cdd4dc;
+      line-height:1.7;
+      margin:0 0 4px 0;
+    }
+
+    /* Top single-line description */
+    .modal-top .modal-description.single-line{
+      font-size:15px;
+      color:#cdd4dc;
+      margin:0 0 12px 0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .modal-stats{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    /* Two-column stat cards grid */
+    .modal-stats-grid, .modal-stats-grid .stat-card{
+      box-sizing:border-box;
+    }
+
+    .modal-stats-grid{
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:12px;
+      margin-bottom:8px;
+    }
+
+    .stat-card{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      background:rgba(255,255,255,0.02);
+      padding:12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.03);
+      min-height:56px;
+    }
+
+    .stat-card .stat-icon{
+      width:44px;
+      height:44px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg, rgba(255,30,21,0.12), rgba(255,30,21,0.06));
+      color:var(--f1-white);
+      border-radius:10px;
+      font-size:18px;
+    }
+
+    .stat-content .stat-label{
+      font-size:11px;
+      color:var(--f1-grey);
+      text-transform:uppercase;
+      letter-spacing:0.6px;
+      margin-bottom:2px;
+    }
+
+    .stat-content .stat-value{
+      font-family:Montserrat;
+      font-size:15px;
+      font-weight:700;
+      color:var(--f1-white);
+    }
+
+    @media (max-width: 800px){
+      .modal-info-grid{ grid-template-columns: 1fr; }
+      .modal-stats-grid{ grid-template-columns:repeat(1, 1fr); }
+      .modal-top .modal-description.single-line{ white-space:normal; }
+      .results-table{ min-width:420px; }
+    }
+
+    /* Results table styling */
+    .results-wrapper{
+      overflow:auto;
+    }
+
+    .results-title{
+      margin:8px 0 12px 0;
+      font-family:Montserrat;
+      font-size:20px;
+      font-weight:800;
+      color:var(--f1-white);
+    }
+
+    .results-table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:560px;
+      background:rgba(0,0,0,0.04);
+      border-radius:12px;
+      overflow:hidden;
+    }
+
+    .results-table thead th{
+      text-align:left;
+      padding:12px 14px;
+      font-size:13px;
+      color:var(--f1-grey);
+      border-bottom:1px solid rgba(255,255,255,0.04);
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      position:sticky;
+      top:0;
+      z-index:2;
+    }
+
+    .results-table tbody td{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.02);
+      font-size:14px;
+      color:var(--f1-white);
+    }
+
+    .results-table tbody tr:nth-child(even){
+      background:rgba(255,255,255,0.01);
+    }
+
+    .td-pos{ width:40px; font-weight:800; }
+    .td-number{ width:48px; color:var(--f1-grey); }
+    .td-driver{ width:40%; font-weight:700; }
+    .td-constructor{ color:var(--f1-grey); }
+    .td-points{ text-align:right; width:70px; font-weight:800; }
+    .td-pole{ width:40px; text-align:center; color:var(--f1-yellow); }
+
 
     .info-section{
       background:rgba(0,0,0,.3);
@@ -489,6 +641,7 @@
         width:100px;
         height:100px;
       }
+  .modal-close{ top:12px; right:12px; }
     }
     /* ===== RACE FILTER BAR STYLES ===== */
 
