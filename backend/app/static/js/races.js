@@ -284,7 +284,7 @@ function setupFilters() {
 }
 
 // Modal açma
-function openRaceModal(raceId) {
+async function openRaceModal(raceId) {
   const race = races.find((r) => r.id === raceId);
   if (!race) return;
 
@@ -302,52 +302,161 @@ function openRaceModal(raceId) {
   subtitleEl.textContent = `${race.officialName} • ${race.year}`;
 
   bodyEl.innerHTML = `
-    <p class="modal-description">${race.description}</p>
-    <div class="modal-grid">
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Year</span>
-        <span class="modal-stat-value">${race.year}</span>
+    <div class="modal-top">
+      <p class="modal-description single-line">${race.description}</p>
+    </div>
+
+    <div class="modal-stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-content">
+          <div class="stat-label">Year</div>
+          <div class="stat-value">${race.year}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Round</span>
-        <span class="modal-stat-value">${race.round}</span>
+
+      <div class="stat-card">
+        <div class="stat-icon">🔢</div>
+        <div class="stat-content">
+          <div class="stat-label">Round</div>
+          <div class="stat-value">${race.round}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Race Date</span>
-        <span class="modal-stat-value">${race.date}</span>
+
+      <div class="stat-card">
+        <div class="stat-icon">📍</div>
+        <div class="stat-content">
+          <div class="stat-label">Circuit</div>
+          <div class="stat-value">${race.circuit}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Qualifying Date</span>
-        <span class="modal-stat-value">${race.qualifyingDate}</span>
+
+      <div class="stat-card">
+        <div class="stat-icon">🗓️</div>
+        <div class="stat-content">
+          <div class="stat-label">Race Date</div>
+          <div class="stat-value">${race.date}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Laps</span>
-        <span class="modal-stat-value">${race.laps}</span>
+
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-content">
+          <div class="stat-label">Qualifying Date</div>
+          <div class="stat-value">${race.qualifyingDate || '-'}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Qualifying Format</span>
-        <span class="modal-stat-value">${race.qualifyingFormat}</span>
+
+      <div class="stat-card">
+        <div class="stat-icon">🔁</div>
+        <div class="stat-content">
+          <div class="stat-label">Laps</div>
+          <div class="stat-value">${race.laps}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Distance</span>
-        <span class="modal-stat-value">${race.distance}</span>
+
+      <div class="stat-card">
+        <div class="stat-icon">🏁</div>
+        <div class="stat-content">
+          <div class="stat-label">Qualifying Format</div>
+          <div class="stat-value">${race.qualifyingFormat}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Track Length</span>
-        <span class="modal-stat-value">${race.trackLength}</span>
+
+      <div class="stat-card">
+        <div class="stat-icon">📏</div>
+        <div class="stat-content">
+          <div class="stat-label">Track Length</div>
+          <div class="stat-value">${race.trackLength}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Is Real</span>
-        <span class="modal-stat-value">${race.isReal ? 'Yes' : 'No (simulated)'}</span>
+
+      <div class="stat-card">
+        <div class="stat-icon">🛰️</div>
+        <div class="stat-content">
+          <div class="stat-label">Is Real</div>
+          <div class="stat-value">${race.isReal ? 'Yes' : 'No (simulated)'}</div>
+        </div>
       </div>
-      <div class="modal-stat-item">
-        <span class="modal-stat-label">Lap Record</span>
-        <span class="modal-stat-value">${race.lapRecord}<br/><small>${race.recordHolder}</small></span>
+
+      <div class="stat-card">
+        <div class="stat-icon">🏎️</div>
+        <div class="stat-content">
+          <div class="stat-label">Lap Record</div>
+          <div class="stat-value">${race.lapRecord || '-'}<br/><small style="font-weight:400;opacity:.8">${race.recordHolder || ''}</small></div>
+        </div>
       </div>
     </div>
+
   `;
 
+  // append results placeholder
+  const resultsContainer = document.createElement('div');
+  resultsContainer.id = 'modalResults';
+  resultsContainer.innerHTML = `<p class="loading">Loading results...</p>`;
+  bodyEl.appendChild(resultsContainer);
+
+  try {
+    const results = await getRaceResults(raceId);
+    resultsContainer.innerHTML = renderResultsTable(results);
+  } catch (err) {
+    console.error('Failed to load race results', err);
+    resultsContainer.innerHTML = `<p class="error">Unable to load results.</p>`;
+  }
+
   modal.classList.add('active');
+}
+
+// ----- race results helper: uses global raceDataMock when available -----
+const _raceData = (window && window.raceDataMock) ? window.raceDataMock : [];
+const raceResultsCache = new Map();
+
+function getRaceResults(raceId) {
+  if (raceResultsCache.has(raceId)) return Promise.resolve(raceResultsCache.get(raceId));
+  const found = _raceData.filter((r) => Number(r.race_id) === Number(raceId));
+  raceResultsCache.set(raceId, found);
+  return Promise.resolve(found);
+}
+
+function renderResultsTable(results) {
+  if (!results || !results.length) return `<p class="empty-state">No results available for this race.</p>`;
+
+  const rows = results
+    .sort((a, b) => Number(a.position_display_order) - Number(b.position_display_order))
+    .map((r) => `
+      <tr>
+        <td class="td-pos">${r.position_display_order}</td>
+        <td class="td-number">${r.driver_number}</td>
+        <td class="td-driver">${r.driver_name || r.driver_id}</td>
+        <td class="td-constructor">${r.constructor_name || r.constructor_id}</td>
+        <td class="td-grid">${r.race_grid_position_number ?? '-'}</td>
+        <td class="td-points">${Number(r.race_points).toFixed(1)}</td>
+        <td class="td-pole">${r.race_pole_position ? 'P' : ''}</td>
+      </tr>
+    `)
+    .join('');
+
+  return `
+    <h3 class="results-title">Results</h3>
+    <div class="results-wrapper">
+      <table class="results-table" cellpadding="0" cellspacing="0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>No</th>
+            <th>Driver</th>
+            <th>Constructor</th>
+            <th>Grid</th>
+            <th>Pts</th>
+            <th>Pole</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 // Modal kapatma
