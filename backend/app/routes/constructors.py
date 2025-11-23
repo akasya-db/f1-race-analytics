@@ -1,7 +1,12 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, session
 
 constructors_bp = Blueprint("constructors", __name__)
 
 @constructors_bp.route("/constructors")
 def constructors_page():
-    return render_template("constructors.html")
+    authenticated = 'username' in session
+    return render_template(
+        "constructors.html",
+        authenticated=authenticated,
+        username=session.get('username')
+    )       

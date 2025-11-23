@@ -88,7 +88,7 @@
       z-index:2;
       max-width:1400px;
   /* keep vertically centered via .hero-banner, but keep horizontal position aligned with page content */
-  margin:0 0 0 clamp(16px,4vw,60px);
+  margin:0;
       padding:24px clamp(16px,4vw,60px);
       display:flex;
       flex-direction:column;
