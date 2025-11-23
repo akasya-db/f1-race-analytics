@@ -153,9 +153,15 @@ const constructors = [
 ];
 
 // Render constructor cards
-function renderConstructors() {
+function renderConstructors(list = constructors) {
     const grid = document.getElementById('constructorsGrid');
-    grid.innerHTML = constructors.map(team => `
+    if (!grid) return;
+
+    if (!list.length) {
+        grid.innerHTML = `<p class="empty-state">No constructors match the selected filters.</p>`;
+        return;
+    }
+    grid.innerHTML = list.map(team => `
     <div class="card" onclick="openModal('${team.id}')">
         <div class="logo-wrapper">
         <img class="logo" src="${team.logo}" alt="${team.name} logo"/>
@@ -177,6 +183,42 @@ function renderConstructors() {
         <button class="btn">View Team</button>
     </div>
     `).join('');
+}
+
+function getFilteredConstructors() {
+    const name = (document.getElementById('filterName')?.value || '').toLowerCase();
+    const nationality = document.getElementById('filterNationality')?.value || '';
+    const champsMin = document.getElementById('filterChampsMin')?.value;
+    const powerUnit = document.getElementById('filterPowerUnit')?.value || '';
+
+    return constructors.filter(team => {
+        if (name && !team.name.toLowerCase().includes(name)) return false;
+        if (nationality && team.nationality !== nationality) return false;
+        if (champsMin && Number(team.championships) < Number(champsMin)) return false;
+        if (powerUnit && team.powerUnit !== powerUnit) return false;
+        return true;
+    });
+}
+
+// Setup form event listeners
+function setupFilters() {
+    const form = document.getElementById('constructorFilters');
+    const resetBtn = document.getElementById('resetFilters');
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const filtered = getFilteredConstructors();
+            renderConstructors(filtered);
+        });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            form.reset();
+            renderConstructors();
+        });
+    }
 }
 
 // Open modal with team details
@@ -243,4 +285,24 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Initialize
-renderConstructors();
+
+// Sayfa yüklendiğinde: filtreleri bağla + tüm yarışları göster
+window.addEventListener('DOMContentLoaded', () => {
+  setupFilters();
+
+  if (window.flatpickr) {
+    flatpickr('#filterDateFrom', {
+      dateFormat: 'Y-m-d',
+      allowInput: false
+    });
+
+    flatpickr('#filterDateTo', {
+      dateFormat: 'Y-m-d',
+      allowInput: false
+    });
+  }
+
+  renderConstructors();
+});
+
+

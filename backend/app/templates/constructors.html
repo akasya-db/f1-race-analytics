@@ -8,9 +8,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/static/css/listing.css"/>
+  <link rel="stylesheet" href="/static/css/navbar.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 </head>
 
 <body>
+  {% include "navbar.html" %}
   <div class="hero-banner">
     <div class="hero-content">
       <h1 class="hero-title">F1 Constructors</h1>
@@ -21,6 +25,50 @@
   </div>
 
   <div class="content-wrapper">
+    <!-- 🔍 FİLTRE BARI -->
+    <form id="constructorFilters" class="filter-bar">
+      <div class="filter-group">
+        <label for="filterName">Team Name</label>
+        <input type="text" id="filterName" placeholder="Search by name"/>
+      </div>
+
+      <div class="filter-group">
+        <label for="filterNationality">Nationality</label>
+        <select id="filterNationality">
+          <option value="">All</option>
+          <option value="Austria">Austria</option>
+          <option value="Italy">Italy</option>
+          <option value="Germany">Germany</option>
+          <option value="United Kingdom">United Kingdom</option>
+          <option value="France">France</option>
+          <option value="Switzerland">Switzerland</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Championships</label>
+        <div class="filter-inline">
+          <input type="number" id="filterChampsMin" min="0" placeholder="Min"/>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="filterPowerUnit">Power Unit</label>
+        <select id="filterPowerUnit">
+          <option value="">All</option>
+          <option value="Red Bull Powertrains">Red Bull</option>
+          <option value="Ferrari">Ferrari</option>
+          <option value="Mercedes">Mercedes</option>
+          <option value="Renault">Renault</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn">Apply</button>
+        <button type="button" id="resetFilters" class="btn btn-secondary">Reset</button>
+      </div>
+    </form>
+    <!-- GRID -->
     <div class="grid" id="constructorsGrid"></div>
   </div>
 
@@ -39,7 +87,9 @@
     </div>
   </div>
 
+  <script src="/static/js/navbar.js"></script>
   <script src="/static/js/constructors.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 </body>
 </html>
