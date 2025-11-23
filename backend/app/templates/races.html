@@ -6,12 +6,15 @@
   <title>Races — F1 Race Analytics</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
-
-  <!-- Aynı tasarımı kullanıyoruz -->
   <link rel="stylesheet" href="/static/css/listing.css"/>
+  <link rel="stylesheet" href="/static/css/navbar.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+
 </head>
 
 <body>
+  {% include "navbar.html" %}
   <div class="hero-banner">
     <div class="hero-content">
       <h1 class="hero-title">F1 Races</h1>
@@ -21,8 +24,75 @@
     </div>
   </div>
 
+  <!-- 🔍 FİLTRE BARI -->
   <div class="content-wrapper">
-    <!-- JS burayı dolduracak -->
+    <form id="raceFilters" class="filter-bar">
+      <div class="filter-group">
+        <label for="filterYear">Year</label>
+        <select id="filterYear" name="year">
+          <option value="">All</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filterRound">Round</label>
+        <input type="number" id="filterRound" name="round" min="1" placeholder="Any"/>
+      </div>
+
+      <div class="filter-group">
+        <label>Date range</label>
+        <div class="filter-inline">
+          <span class="range-label">From</span>
+          <input type="date" id="filterDateFrom" class="date-input" />
+          <span class="range-label">To</span>
+          <input type="date" id="filterDateTo" class="date-input" />
+        </div>
+      </div>
+
+
+
+      <div class="filter-group">
+        <label for="filterOfficialName">Official name</label>
+        <input type="text" id="filterOfficialName" placeholder="Search by official name"/>
+      </div>
+
+      <div class="filter-group">
+        <label for="filterQualifyingFormat">Qualifying format</label>
+        <select id="filterQualifyingFormat">
+          <option value="">All</option>
+          <option value="standard">Standard</option>
+          <option value="sprint">Sprint</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Laps</label>
+        <div class="filter-inline">
+          <input type="number" id="filterLapsMin" min="0" placeholder="Min"/>
+          <span>–</span>
+          <input type="number" id="filterLapsMax" min="0" placeholder="Max"/>
+        </div>
+      </div>
+
+      <div class="filter-group checkbox-group">
+        <label>
+          <input type="checkbox" id="filterIsReal"/>
+          Only real races
+        </label>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn">Apply</button>
+        <button type="button" id="resetFilters" class="btn btn-secondary">Reset</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- GRID -->
+  <div class="content-wrapper">
     <div class="grid" id="racesGrid"></div>
   </div>
 
@@ -40,7 +110,8 @@
       <div class="modal-body" id="modalBody"></div>
     </div>
   </div>
-
+  <script src="/static/js/navbar.js"></script>
   <script src="/static/js/races.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </body>
 </html>
