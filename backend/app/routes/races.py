@@ -1,7 +1,12 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, session
 
 races_bp = Blueprint("races", __name__)
 
 @races_bp.route("/races")
 def races_page():
-    return render_template("races.html")
+    authenticated = 'username' in session
+    return render_template(
+        "races.html",
+        authenticated=authenticated,
+        username=session.get('username')
+    )
