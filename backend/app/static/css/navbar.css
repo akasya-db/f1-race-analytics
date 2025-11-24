@@ -15,6 +15,8 @@
   gap:12px;
   font-weight:900;
   letter-spacing:.4px;
+  text-decoration:none;
+  color:var(--f1-white);
 }
 
 .brand .logo{
@@ -27,6 +29,7 @@
 
 .brand span{
   font-family:Montserrat,Poppins,sans-serif;
+  color:inherit;
 }
 
 .menu{
@@ -39,6 +42,7 @@
   color:#c7d1db;
   text-decoration:none;
   font-weight:600;
+  user-select:none;
 }
 
 .menu a:hover{
@@ -62,6 +66,7 @@
   padding:8px 12px;
   border-radius:8px;
   transition:background .2s ease;
+  user-select:none;
 }
 
 .user-dropdown-toggle:hover{
@@ -108,6 +113,7 @@
   text-decoration:none;
   font-weight:600;
   transition:background .2s ease, color .2s ease;
+  user-select:none;
 }
 
 .dropdown-menu a:hover{
@@ -136,8 +142,12 @@
   letter-spacing:.4px;
   text-decoration:none;
   color:var(--f1-white);
+  user-select:none;
 }
-.brand:hover{
+.brand:visited,
+.brand:hover,
+.brand:focus{
   color:#ffffff;
+  text-decoration:none;
 }
 

@@ -1,0 +1,241 @@
+:root {
+  --f1-red:#ff1e15;
+  --f1-red-dark:#c20f09;
+  --f1-black:#07090c;
+  --f1-dark:#0b1118;
+  --f1-white:#f6f8fb;
+  --f1-grey:#a9bdd1;
+  --f1-yellow:#ffd038;
+  --f1-green:#00e08d;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(1200px 700px at 20% 10%, #17212b 0%, #0b0d0f 60%);
+  color:var(--f1-white);
+  font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;
+  display:flex;
+  flex-direction:column;
+}
+
+.auth-nav {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px clamp(18px,5vw,56px);
+}
+
+.auth-brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-weight:900;
+  letter-spacing:.4px;
+  text-decoration:none;
+  color:var(--f1-white);
+  user-select:none;
+}
+.auth-brand:visited,
+.auth-brand:hover,
+.auth-brand:focus {
+  color:var(--f1-white);
+  text-decoration:none;
+}
+.auth-brand .logo {
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  background:linear-gradient(135deg,var(--f1-red),#8e0200);
+}
+
+.auth-nav-links {
+  display:flex;
+  gap:16px;
+  align-items:center;
+}
+
+.auth-nav-links a {
+  color:#c7d1db;
+  text-decoration:none;
+  font-weight:600;
+  padding:8px 14px;
+  border-radius:10px;
+  transition:background .2s ease,color .2s ease;
+  user-select:none;
+}
+
+.auth-nav-links a:hover,
+.auth-nav-links a.is-active {
+  color:white;
+  background:rgba(255,255,255,.08);
+}
+
+.auth-layout {
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px clamp(18px,6vw,80px) 80px;
+}
+
+.auth-card {
+  background:rgba(7,9,12,.85);
+  border-radius:22px;
+  padding:40px;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 24px 40px rgba(0,0,0,.45);
+  width:min(520px, 100%);
+  margin:0 auto;
+}
+
+.auth-card h1 {
+  font-family:"Montserrat",Poppins,sans-serif;
+  font-size:clamp(28px,4vw,42px);
+  font-weight:900;
+  margin:0 0 12px 0;
+}
+
+.auth-card p {
+  color:var(--f1-grey);
+  margin:0 0 24px 0;
+  line-height:1.6;
+}
+
+.input-group {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:22px;
+}
+
+.input-group label {
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--f1-grey);
+  font-weight:600;
+}
+
+.input-group input,
+.input-group select {
+  padding:14px 16px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(0,0,0,.4);
+  color:var(--f1-white);
+  font-size:15px;
+  transition:border-color .2s ease,box-shadow .2s ease;
+  appearance:none;
+}
+
+.input-group select {
+  cursor:pointer;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline:none;
+  border-color:var(--f1-red);
+  box-shadow:0 0 0 3px rgba(255,30,21,.2);
+}
+
+.input-hint {
+  font-size:12px;
+  color:var(--f1-grey);
+  opacity:.85;
+}
+
+.optional-badge {
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  color:var(--f1-grey);
+  margin-left:6px;
+}
+
+.primary-btn {
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(180deg,#ff5149,var(--f1-red));
+  color:white;
+  font-weight:800;
+  letter-spacing:.6px;
+  cursor:pointer;
+  font-size:15px;
+  transition:transform .15s ease,filter .2s ease;
+  margin-top:8px;
+  user-select:none;
+}
+
+.primary-btn:hover {
+  transform:translateY(-2px);
+  filter:saturate(1.15) brightness(1.05);
+}
+
+.auth-switch {
+  margin-top:26px;
+  font-size:14px;
+  color:var(--f1-grey);
+  text-align:center;
+}
+
+.auth-switch a {
+  color:var(--f1-yellow);
+  font-weight:700;
+  text-decoration:none;
+}
+
+.auth-switch a:hover {
+  color:var(--f1-white);
+}
+
+.flash-stack {
+  position:fixed;
+  top:30px;
+  right:20px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  z-index:100;
+}
+
+.flash-message {
+  background:linear-gradient(135deg,var(--f1-green),#0cbf7b);
+  color:#fff;
+  padding:14px 18px;
+  border-radius:12px;
+  box-shadow:0 12px 22px rgba(0,0,0,.35);
+  font-weight:600;
+  animation:flashIn .3s ease,flashOut .3s ease 3.7s forwards;
+}
+
+.flash-message.error {
+  background:linear-gradient(135deg,var(--f1-red),var(--f1-red-dark));
+}
+
+@keyframes flashIn {
+  from {opacity:0; transform:translateX(60px);}
+  to {opacity:1; transform:translateX(0);}
+}
+
+@keyframes flashOut {
+  from {opacity:1; transform:translateX(0);}
+  to {opacity:0; transform:translateX(60px);}
+}
+
+@media (max-width:600px) {
+  .auth-card {
+    padding:28px;
+  }
+}
+

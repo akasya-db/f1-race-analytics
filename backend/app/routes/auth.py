@@ -25,34 +25,64 @@ def index():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    db = DatabaseConnection()
+    try:
+        def fetch_countries():
+            db.execute('SELECT id, name, alpha3_code FROM country ORDER BY name')
+            return db.fetchall()
         
-        if not username or not password:
-            flash('Username and password are required.')
-            return render_template('register.html')
+        form_data = {'username': '', 'email': '', 'country_id': ''}
+        
+        if request.method == 'POST':
+            username = (request.form.get('username') or '').strip()
+            email = (request.form.get('email') or '').strip()
+            password = request.form.get('password')
+            country_id = request.form.get('country_id') or ''
             
-        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        db = DatabaseConnection()
-        try:
-            # Generate a unique user ID
-            import uuid
-            user_id = str(uuid.uuid4())
+            form_data = {'username': username, 'email': email, 'country_id': country_id}
             
-            # Insert into the "user" table with required fields
-            db.execute('INSERT INTO "user" (id, username, password_hash, email) VALUES (%s, %s, %s, %s)', 
-                      (user_id, username, hashed_pw.decode('utf-8'), f"{username}@example.com"))
-            db.commit()
+            if not username or not email or not password:
+                flash('Username, email, and password are required.', 'error')
+                return render_template('register.html', countries=fetch_countries(), form_data=form_data)
             
-            flash('Registration successful!')
-            return redirect(url_for('auth.login'))
-        except Exception as e:
-            flash('Registration failed: ' + str(e))
-            return render_template('register.html')
-        finally:
-            db.close()
-    return render_template('register.html')
+            if '@' not in email or '.' not in email:
+                flash('Please enter a valid email address.', 'error')
+                return render_template('register.html', countries=fetch_countries(), form_data=form_data)
+            
+            hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            
+            try:
+                import uuid
+                user_id = str(uuid.uuid4())
+                
+                # Ensure username is unique
+                db.execute('SELECT id FROM "user" WHERE username = %s', (username,))
+                if db.fetchone():
+                    flash('Username already exists.', 'error')
+                    return render_template('register.html', countries=fetch_countries(), form_data=form_data)
+                
+                # Ensure email is unique
+                db.execute('SELECT id FROM "user" WHERE email = %s', (email,))
+                if db.fetchone():
+                    flash('Email already registered.', 'error')
+                    return render_template('register.html', countries=fetch_countries(), form_data=form_data)
+                
+                db.execute(
+                    'INSERT INTO "user" (id, country_id, username, password_hash, email) VALUES (%s, %s, %s, %s, %s)',
+                    (user_id, country_id if country_id else None, username, hashed_pw.decode('utf-8'), email)
+                )
+                db.commit()
+                
+                flash('Registration successful! Please login.', 'success')
+                return redirect(url_for('auth.login'))
+            except Exception as e:
+                flash('Registration failed: ' + str(e), 'error')
+                return render_template('register.html', countries=fetch_countries(), form_data=form_data)
+        
+        countries = fetch_countries()
+        return render_template('register.html', countries=countries, form_data=form_data)
+    finally:
+        db.close()
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():

@@ -28,9 +28,10 @@
     /* NAV */
     .nav{position:absolute; inset:0 0 auto 0; display:flex; align-items:center; justify-content:space-between;
          padding:20px clamp(18px,5vw,56px); z-index:10;}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.4px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.4px;text-decoration:none;color:var(--f1-white);user-select:none}
+    .brand:visited, .brand:hover, .brand:focus{color:var(--f1-white);text-decoration:none}
     .brand .logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--f1-red),#8e0200);position:relative}
-    .brand span{font-family:Montserrat,Poppins,sans-serif}
+    .brand span{font-family:Montserrat,Poppins,sans-serif;color:inherit}
     .menu{display:flex;gap:clamp(12px,3vw,28px);align-items:center}
     .menu a{color:#c7d1db;text-decoration:none;font-weight:600}
     .menu a:hover{color:white}
@@ -72,7 +73,8 @@
     .cta-row{display:flex;gap:14px;margin-top:26px;align-items:center}
     .btn{--padY:14px;--padX:26px;--shadow:0 12px 18px rgba(225,6,0,.28),0 2px 6px rgba(0,0,0,.25);
          background:linear-gradient(180deg,#ff5149,var(--f1-red));color:white;border:none;padding:var(--padY) var(--padX);
-         border-radius:14px;font-weight:800;letter-spacing:.4px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s ease,filter .2s ease}
+         border-radius:14px;font-weight:800;letter-spacing:.4px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s ease,filter .2s ease;
+         user-select:none}
     .btn:hover{transform:translateY(-1px);filter:saturate(1.15)}
     .btn.secondary{background:linear-gradient(180deg,#202b36,#141c24);box-shadow:0 10px 16px rgba(0,0,0,.35)}
 
@@ -81,7 +83,8 @@
 
     .pillBtn{display:flex;align-items:center;justify-content:center;gap:12px;text-decoration:none;color:#fff;font-weight:800;
       padding:20px 24px;border-radius:18px;background:linear-gradient(180deg,var(--f1-red) 0%, var(--f1-red-dark) 100%);
-      box-shadow:0 16px 26px rgba(255,30,21,.28), inset 0 1px 0 #ffb2ae; border:1px solid #7a0a07; transition:transform .15s ease, box-shadow .2s ease, filter .2s ease}
+      box-shadow:0 16px 26px rgba(255,30,21,.28), inset 0 1px 0 #ffb2ae; border:1px solid #7a0a07; transition:transform .15s ease, box-shadow .2s ease, filter .2s ease;
+      user-select:none}
 
     .pillBtn:hover{transform:translateY(-2px);box-shadow:0 18px 28px rgba(225,6,0,.30), inset 0 1px 0 #ffb1ac}
     .pillBtn:focus{outline:2px solid #fff; outline-offset:2px}

@@ -5,7 +5,6 @@
   </a>
   <nav class="menu" aria-label="Main menu">
     {% if authenticated %}
-      <a href="{{ url_for('auth.index') }}">Dashboard</a>
       <div class="user-dropdown">
         <div class="user-dropdown-toggle" onclick="toggleDropdown()">
           <span>{{ username }}</span>

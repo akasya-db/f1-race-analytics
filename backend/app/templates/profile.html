@@ -147,6 +147,7 @@
       text-decoration:none;
       display:inline-block;
       text-align:center;
+      user-select:none;
     }
 
     .btn-primary{
@@ -301,6 +302,7 @@
 
       .btn{
         width:100%;
+        user-select:none;
       }
     }
   </style>
@@ -322,7 +324,6 @@
       <span>F1 Race Analytics</span>
     </a>
     <nav class="menu" aria-label="Main menu">
-      <a href="{{ url_for('auth.index') }}">Dashboard</a>
       <a href="{{ url_for('constructors.constructors_page') }}">Constructors</a>
       <a href="{{ url_for('drivers.drivers_page') }}">Drivers</a>
       <a href="{{ url_for('races.races_page') }}">Races</a>
