@@ -46,7 +46,7 @@ INSERT INTO "country" ("id", "alpha3_code", "name") VALUES ('chad', 'TCD', 'Chad
 INSERT INTO "country" ("id", "alpha3_code", "name") VALUES ('chile', 'CHL', 'Chile');
 INSERT INTO "country" ("id", "alpha3_code", "name") VALUES ('china', 'CHN', 'China');
 INSERT INTO "country" ("id", "alpha3_code", "name") VALUES ('christmas-island', 'CXR', 'Christmas Island');
-INSERT INTO "country" ("id", "alpha2_code", "alpha3_code", "ioc_code", "name", "demonym", "continent_id") VALUES ('cocos-keeling-islands', 'CC', 'CCK', NULL, 'Cocos (Keeling) Islands', 'Cocossian', 'asia');
+INSERT INTO "country" ("id", "alpha3_code", "name") VALUES ('cocos-keeling-islands', 'CCK', 'Cocos (Keeling) Islands');
 INSERT INTO "country" ("id", "alpha3_code", "name") VALUES ('colombia', 'COL', 'Colombia');
 INSERT INTO "country" ("id", "alpha3_code", "name") VALUES ('comoros', 'COM', 'Comoros');
 INSERT INTO "country" ("id", "alpha3_code", "name") VALUES ('cook-islands', 'COK', 'Cook Islands');
