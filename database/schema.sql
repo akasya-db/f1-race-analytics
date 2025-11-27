@@ -105,7 +105,7 @@ CREATE TABLE driver (
     total_podiums                   INT          NOT NULL,
     total_points                    DECIMAL(8,2) NOT NULL,
     total_pole_positions            INT          NOT NULL,
-    is_real                         BOOLEAN      DEFAULT TRUE,
+    is_real                         BOOLEAN      DEFAULT FALSE,
 
     FOREIGN KEY (country_of_birth_country_id) REFERENCES country(id),
     FOREIGN KEY (nationality_country_id)      REFERENCES country(id)
