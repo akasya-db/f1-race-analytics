@@ -31,7 +31,8 @@ CREATE TABLE "user" (
     username      VARCHAR(100) NOT NULL UNIQUE,
     password_hash TEXT         NOT NULL,
     email         VARCHAR(255) NOT NULL UNIQUE,
-    date_joined   TIMESTAMP    NOT NULL DEFAULT NOW()
+    date_joined   TIMESTAMP    NOT NULL DEFAULT NOW(),
+    is_admin      BOOLEAN      NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX user_username_idx ON "user"(username);
