@@ -129,9 +129,9 @@ function renderPagination(paginationData) {
     const nextDisabled = current_page === total_pages ? 'disabled' : '';
 
     html += `
-        <button class="page-btn nav-btn" onclick="fetchConstructors(${current_page + 1})" ${nextDisabled}>
+        <button class="page-btn nav-btn" onclick="fetchRaces(${current_page + 1})" ${nextDisabled}>
             &rsaquo; </button>
-        <button class="page-btn nav-btn" onclick="fetchConstructors(${total_pages})" ${nextDisabled}>
+        <button class="page-btn nav-btn" onclick="fetchRaces(${total_pages})" ${nextDisabled}>
             &raquo; </button>
     `;
 
@@ -212,11 +212,52 @@ async function openRaceModal(raceId) {
     </div>
     
     <div id="modalResults">
-        <p class="loading">Loading results (Not implemented in backend yet)...</p>
+        <p class="loading">Loading results...</p>
     </div>
   `;
-
   modal.classList.add('active');
+
+  // Fetch and render race_data for this race
+  const resultsEl = document.getElementById('modalResults');
+  if (!resultsEl) return;
+
+  try {
+    // show loading (already present)
+    const payload = await window.fetchRaceData({ raceId: raceId, page: 1 });
+    const rows = payload?.race_data || [];
+
+    if (!rows || rows.length === 0) {
+      resultsEl.innerHTML = '<p class="empty-state">No results available for this race.</p>';
+      return;
+    }
+
+    // Render a simple results table
+    const tableHtml = [];
+    tableHtml.push('<table class="results-table">');
+    tableHtml.push('<thead><tr><th>#</th><th>Driver</th><th>Constructor</th><th>No</th><th>Grid</th><th>Qual</th><th>Points</th></tr></thead>');
+    tableHtml.push('<tbody>');
+
+    for (const r of rows) {
+      tableHtml.push(`
+        <tr>
+          <td>${r.position_display_order ?? '-'}</td>
+          <td>${r.driver_name ?? r.driver_id}</td>
+          <td>${r.constructor_name ?? r.constructor_id}</td>
+          <td>${r.driver_number ?? '-'}</td>
+          <td>${r.race_grid_position_number ?? '-'}</td>
+          <td>${r.race_qualification_position_number ?? '-'}</td>
+          <td>${r.race_points ?? '-'}</td>
+        </tr>
+      `);
+    }
+
+    tableHtml.push('</tbody></table>');
+    resultsEl.innerHTML = tableHtml.join('');
+
+  } catch (err) {
+    console.error('Error fetching race results for modal:', err);
+    resultsEl.innerHTML = '<p class="error-state">Unable to load race results. Please try again later.</p>';
+  }
 }
 
 function closeRaceModal() {

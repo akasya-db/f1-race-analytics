@@ -81,3 +81,49 @@ def get_races_data():
 
     finally:
         db.close()
+
+
+@races_bp.route("/api/race_data")
+def get_race_data():
+    """Return race_data rows for a specific race id (or all if not provided).
+    Query params: race_id (int), page (int), is_real (true|false)
+    """
+    raw_race_id = request.args.get('race_id')
+    raw_page = request.args.get('page', 1, type=int)
+    raw_is_real = request.args.get('is_real')
+
+    per_page = 50
+    offset = (raw_page - 1) * per_page
+
+    race_id = int(raw_race_id) if raw_race_id else None
+    is_real_value = True if raw_is_real == 'true' else None
+
+    params = {
+        'race_id': race_id,
+        'is_real': is_real_value,
+        'limit': per_page,
+        'offset': offset
+    }
+
+    db = DatabaseConnection()
+    try:
+        sql_query = get_sql_query('select_race_data.sql')
+        db.execute(sql_query, params)
+        rows = db.fetchall()
+        data = [dict(row) for row in rows]
+        total_items = data[0]['full_count'] if data else 0
+        total_pages = (total_items + per_page - 1) // per_page
+
+        return jsonify({
+            'race_data': data,
+            'pagination': {
+                'current_page': raw_page,
+                'total_pages': total_pages,
+                'total_items': total_items
+            }
+        })
+    except Exception as e:
+        print(f"Error fetching race_data: {e}")
+        return jsonify({'error': 'Internal Server Error'}), 500
+    finally:
+        db.close()
