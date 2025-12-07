@@ -630,6 +630,58 @@
       color:var(--f1-white);
     }
 
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px; 
+        margin-top: 30px;
+        padding-bottom: 50px;
+    }
+
+    .page-btn {
+        min-width: 40px;  
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1a1a1a; 
+        color: #e0e0e0;
+        border: 1px solid #333;
+        border-radius: 6px; 
+        cursor: pointer;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .page-btn:hover:not(:disabled) {
+        background: #333;
+        border-color: #555;
+    }
+
+    .page-btn.active {
+        background: #e10600; 
+        border-color: #e10600;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .nav-btn {
+        font-size: 1.2rem; 
+        color: #888; 
+    }
+    .nav-btn:hover:not(:disabled) {
+        color: #fff;
+    }
+
+    .page-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        background: #000;
+        border-color: #222;
+    }
+
     @media (max-width: 600px){
       .modal-content{
         padding:24px;
@@ -644,7 +696,6 @@
       }
   .modal-close{ top:12px; right:12px; }
     }
-    /* ===== RACE FILTER BAR STYLES ===== */
 
 .filter-bar{
   display:flex;
