@@ -8,5 +8,6 @@ def races_page():
     return render_template(
         "races.html",
         authenticated=authenticated,
-        username=session.get('username')
+        username=session.get('username'),
+        is_admin=session.get('is_admin', False)
     )

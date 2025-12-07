@@ -394,6 +394,20 @@
       </div>
     </form>
 
+    {% if is_admin %}
+    <div class="profile-card" style="background: linear-gradient(135deg, rgba(255,30,21,0.12) 0%, rgba(194,15,9,0.06) 40%, transparent 70%), #0f151c; border: 1px solid rgba(255,30,21,.3);">
+      <h2 style="color: var(--f1-red);">Admin Panel</h2>
+      <p style="color: var(--f1-grey); margin-bottom: 24px; line-height: 1.6;">
+        You have administrator privileges. Access the admin panel to manage all database records including circuits, drivers, constructors, races, and more.
+      </p>
+      <div class="btn-group">
+        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-primary" style="background: linear-gradient(180deg, #ff5149, var(--f1-red));">
+          Open Admin Panel
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="profile-card delete-section">
       <h3>Delete Account</h3>
       <p>Once you delete your account, there is no going back. Please be certain. You will need to enter your password to confirm account deletion.</p>

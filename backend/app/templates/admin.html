@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel | F1 Race Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for message in messages %}
+          <div class="flash-message {% if 'error' in message|lower or 'failed' in message|lower %}error{% endif %}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <header class="nav" aria-label="Primary">
+    <a href="{{ url_for('auth.index') }}" class="brand" aria-label="F1 Race Analytics">
+      <div class="logo" aria-hidden="true"></div>
+      <span>F1 Race Analytics</span>
+    </a>
+    <nav class="menu" aria-label="Main menu">
+      <a href="{{ url_for('constructors.constructors_page') }}">Constructors</a>
+      <a href="{{ url_for('drivers.drivers_page') }}">Drivers</a>
+      <a href="{{ url_for('races.races_page') }}">Races</a>
+      <a href="{{ url_for('auth.logout') }}">Logout</a>
+    </nav>
+  </header>
+
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1>Admin Panel</h1>
+      <p>Manage all database records and data</p>
+    </div>
+
+    <div class="tables-grid">
+      {% for table_key, table_info in tables.items() %}
+      <a href="{{ url_for('admin.admin_table_list', table_name=table_key) }}" class="table-card">
+        <div class="table-card-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </div>
+        <h3>{{ table_info.name }}</h3>
+        <p>Manage {{ table_info.display_name|lower }} records</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    // Auto-remove flash messages after 4 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(function(message) {
+        setTimeout(function() {
+          message.remove();
+        }, 4000);
+      });
+    });
+  </script>
+</body>
+</html>

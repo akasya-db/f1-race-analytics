@@ -18,7 +18,8 @@ def constructors_page():
     return render_template(
         "constructors.html",
         authenticated=authenticated,
-        username=session.get('username')
+        username=session.get('username'),
+        is_admin=session.get('is_admin', False)
     )       
 
 # API route fetches the data

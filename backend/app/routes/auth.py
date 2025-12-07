@@ -1,8 +1,9 @@
 
-from flask import Blueprint, request, render_template, redirect, url_for, flash, session
+from flask import Blueprint, request, render_template, redirect, url_for, flash, session, current_app
 import os
 import bcrypt
 from app.database import DatabaseConnection
+from collections.abc import Mapping
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -13,15 +14,18 @@ def index():
     If user is logged in, shows dashboard
     If user is not logged in, shows landing page with login/register options
     """
+    is_admin = session.get('is_admin', False)
+    current_app.logger.debug("Index view: user=%s, is_admin=%s", session.get('username'), is_admin)
     if 'username' in session:
         # User is logged in, show dashboard
         return render_template('index.html', 
                              authenticated=True,
                              username=session['username'],
-                             email=session['email'])
+                             email=session['email'],
+                             is_admin=is_admin)
     else:
         # User is not logged in, show landing page
-        return render_template('index.html', authenticated=False)
+        return render_template('index.html', authenticated=False, is_admin=is_admin)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -87,17 +91,38 @@ def register():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
+        username_or_email = (request.form.get('username') or '').strip()
         password = request.form.get('password')
         db = DatabaseConnection()
         try:
-            db.execute('SELECT * FROM "user" WHERE username = %s', (username,))
-            user = db.fetchone()
+            user = None
+            if username_or_email:
+                db.execute('SELECT * FROM "user" WHERE username = %s', (username_or_email,))
+                user = db.fetchone()
+                if not user:
+                    db.execute('SELECT * FROM "user" WHERE email = %s', (username_or_email,))
+                    user = db.fetchone()
             if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                # Normalize row to mapping for consistent access
                 session['user_id'] = user['id']
                 session['username'] = user['username']
                 session['email'] = user['email']
+                # Get is_admin - handle mapping and other row types
+                if isinstance(user, Mapping):
+                    is_admin = user.get('is_admin', False)
+                else:
+                    try:
+                        is_admin = user['is_admin']
+                    except (TypeError, KeyError):
+                        try:
+                            is_admin = user.is_admin if hasattr(user, 'is_admin') else False
+                        except:
+                            is_admin = False
+                session['is_admin'] = bool(is_admin)
+                current_app.logger.info("Login success: user=%s is_admin=%s", session['username'], session['is_admin'])
                 flash('Login successful!')
+                if session['is_admin']:
+                    flash('Admin olarak giriş yaptın. Sağ üst köşedeki menüden admin paneline ulaşabilirsin.', 'info')
                 return redirect(url_for('auth.index'))
             else:
                 flash('Invalid username or password.')
@@ -134,11 +159,27 @@ def profile():
         db.execute('SELECT id, name, alpha3_code FROM country ORDER BY name')
         countries = db.fetchall()
         
+        # Check if user is admin - handle both dict and tuple responses
+        if isinstance(user, Mapping):
+            is_admin = user.get('is_admin', False)
+        else:
+            try:
+                is_admin = user['is_admin']
+            except (TypeError, KeyError):
+                try:
+                    is_admin = user.is_admin if hasattr(user, 'is_admin') else False
+                except:
+                    is_admin = False
+        
+        # Also update session with current is_admin status
+        session['is_admin'] = bool(is_admin)
+        
         return render_template('profile.html',
                              user=user,
                              countries=countries,
                              username=session['username'],
-                             email=session['email'])
+                             email=session['email'],
+                             is_admin=bool(is_admin))
     finally:
         db.close()
 
