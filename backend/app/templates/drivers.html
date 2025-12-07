@@ -5,89 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Drivers — F1 Race Analytics</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/listing.css"/>
   <link rel="stylesheet" href="/static/css/navbar.css"/>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 </head>
 
 <body>
   {% include "navbar.html" %}
 
-  <!-- Hero -->
   <div class="hero-banner">
     <div class="hero-content">
       <h1 class="hero-title">F1 Drivers</h1>
       <p class="hero-subtitle">
-        Explore current Formula 1 drivers, compare performance, and dive into detailed profiles.
+        Explore Formula 1 drivers, compare performance, and filter historical data.
       </p>
     </div>
   </div>
 
   <div class="content-wrapper">
-
-    <!-- FILTER BAR -->
     <form id="driverFilters" class="filter-bar">
 
+      <!-- Name -->
       <div class="filter-group">
-        <label for="filterDriverName">Driver / Team</label>
-        <input type="text" id="filterDriverName" placeholder="Search by driver or team..."/>
+        <label for="filterDriverName">Driver name</label>
+        <input type="text" id="filterDriverName" placeholder="Search by name..."/>
       </div>
 
+      <!-- Nationality -->
       <div class="filter-group">
         <label for="filterDriverNationality">Nationality</label>
-        <select id="filterDriverNationality">
-          <option value="">All</option>
-          <option value="United Kingdom">United Kingdom</option>
-          <option value="Spain">Spain</option>
-          <option value="Netherlands">Netherlands</option>
-          <option value="Monaco">Monaco</option>
-          <option value="Mexico">Mexico</option>
-          <option value="France">France</option>
-          <option value="Australia">Australia</option>
-        </select>
+        <input type="text" id="filterDriverNationality" placeholder="e.g. British, Spanish"/>
       </div>
 
-      <div class="filter-group">
-        <label for="filterDriverTeam">Team</label>
-        <select id="filterDriverTeam">
-          <option value="">All</option>
-          <option value="Red Bull Racing">Red Bull Racing</option>
-          <option value="Ferrari">Scuderia Ferrari</option>
-          <option value="Mercedes-AMG Petronas">Mercedes</option>
-          <option value="McLaren">McLaren</option>
-          <option value="Aston Martin">Aston Martin</option>
-          <option value="Alpine">Alpine</option>
-        </select>
-      </div>
-
+      <!-- Wins -->
       <div class="filter-group">
         <label for="filterWinsMin">Wins ≥</label>
         <input type="number" id="filterWinsMin" min="0" placeholder="0"/>
       </div>
 
+      <!-- Podiums -->
       <div class="filter-group">
         <label for="filterPodiumsMin">Podiums ≥</label>
         <input type="number" id="filterPodiumsMin" min="0" placeholder="0"/>
       </div>
 
+      <!-- Points -->
       <div class="filter-group">
         <label for="filterPointsMin">Points ≥</label>
         <input type="number" id="filterPointsMin" min="0" placeholder="0"/>
       </div>
 
+      <!-- Poles -->
       <div class="filter-group">
         <label for="filterPolesMin">Poles ≥</label>
         <input type="number" id="filterPolesMin" min="0" placeholder="0"/>
       </div>
 
+      <!-- Birthplace -->
       <div class="filter-group">
         <label for="filterBirthPlace">Birthplace</label>
         <input type="text" id="filterBirthPlace" placeholder="Search birthplace..."/>
       </div>
 
+      <!-- Birth year -->
       <div class="filter-group">
-        <label>Birth Year Range</label>
+        <label>Birth year range</label>
         <div class="filter-inline">
           <input type="number" id="filterBirthYearFrom" placeholder="From"/>
           <span>–</span>
@@ -95,17 +80,28 @@
         </div>
       </div>
 
+      <!-- Real only -->
+      <div class="filter-group checkbox-group">
+        <label>
+          <input type="checkbox" id="filterIsReal"/>
+          Only real drivers
+        </label>
+      </div>
+
       <div class="filter-actions">
         <button type="submit" class="btn">Apply</button>
         <button type="button" id="resetDriverFilters" class="btn btn-secondary">Reset</button>
       </div>
     </form>
-
-    <!-- GRID -->
-    <div class="grid" id="driversGrid"></div>
   </div>
 
-  <!-- Modal -->
+  <!-- GRID -->
+  <div class="content-wrapper">
+    <div class="grid" id="driversGrid"></div>
+    <div id="pagination" class="pagination-container"></div>
+  </div>
+
+  <!-- MODAL -->
   <div class="modal" id="driverModal">
     <div class="modal-content">
       <button class="modal-close" onclick="closeDriverModal()">×</button>
@@ -124,5 +120,6 @@
 
   <script src="/static/js/navbar.js"></script>
   <script src="/static/js/drivers.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </body>
 </html>
