@@ -127,3 +127,84 @@ def get_race_data():
         return jsonify({'error': 'Internal Server Error'}), 500
     finally:
         db.close()
+
+@races_bp.route("/add-race")
+def add_race_page():
+    authenticated = 'username' in session
+
+    db = DatabaseConnection()
+    try:
+        # Get all countries for the dropdown
+        # country selection form database to show in add-race page - will be added
+        countries = db.fetchall()
+
+        return render_template(
+            "add_race.html",
+            authenticated=authenticated,
+            username=session.get('username'),
+            is_admin=session.get('is_admin', False),
+            countries=countries
+        )
+    finally:
+        db.close()
+
+@races_bp.route("/api/add-constructor", methods=["POST"])
+def add_constructor():
+    if 'username' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        user_id = session.get('user_id')
+        
+        db = DatabaseConnection()
+        
+        # Get the next constructor ID
+        db.execute("SELECT MAX(CAST(SUBSTRING(id FROM '[0-9]+') AS INTEGER)) as max_id FROM constructor WHERE id ~ '^uc-[0-9]+$'")
+        result = db.fetchone()
+        next_num = (result['max_id'] or 0) + 1 if result else 1
+        constructor_id = f"uc-{next_num}"
+        
+        # Insert constructor
+        insert_query = """
+            INSERT INTO constructor (
+                id, user_id, country_id, name, full_name,
+                best_championship_position, total_championship_wins,
+                total_race_starts, total_podiums, total_points,
+                total_pole_positions, is_real
+            ) VALUES (
+                %(id)s, %(user_id)s, %(country_id)s, %(name)s, %(full_name)s,
+                %(best_championship_position)s, %(total_championship_wins)s,
+                %(total_race_starts)s, %(total_podiums)s, %(total_points)s,
+                %(total_pole_positions)s, FALSE
+            )
+        """
+        
+        params = {
+            'id': constructor_id,
+            'user_id': user_id,
+            'country_id': data['country_id'],
+            'name': data['name'],
+            'full_name': data['name'],  # Same as name
+            'best_championship_position': data.get('best_championship_position') or None,
+            'total_championship_wins': data['total_championship_wins'],
+            'total_race_starts': data['total_race_starts'],
+            'total_podiums': data['total_podiums'],
+            'total_points': data['total_points'],
+            'total_pole_positions': data['total_pole_positions']
+        }
+        
+        db.execute(insert_query, params)
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'constructor_id': constructor_id,
+            'message': 'Constructor added successfully'
+        })
+        
+    except Exception as e:
+        print(f"Error adding constructor: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()

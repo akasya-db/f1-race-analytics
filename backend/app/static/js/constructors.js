@@ -47,9 +47,6 @@ function renderConstructors(list) {
 
     grid.innerHTML = list.map(team => `
     <div class="card" onclick="openModal('${team.id}')">
-        <div class="logo-wrapper">
-            <img class="logo" src="${team.logo || '/static/img/placeholder.png'}" alt="${team.name} logo"/>
-        </div>
         <div class="team-info">
             <div class="name">${team.name}</div>
             <div class="nation">${team.nationality}</div>

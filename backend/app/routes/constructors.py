@@ -76,3 +76,47 @@ def get_constructors_data():
 
     finally:
         db.close()
+
+# ...existing code...
+
+@constructors_bp.route("/api/constructors/<constructor_id>")
+def get_constructor_by_id(constructor_id):
+    db = DatabaseConnection()
+    try:
+        query = """
+            SELECT 
+                c.id,
+                c.name,
+                c.full_name,
+                c.best_championship_position,
+                c.total_championship_wins,
+                c.total_race_starts,
+                c.total_podiums,
+                c.total_points,
+                c.total_pole_positions,
+                c.country_id,
+                co.name as nationality
+            FROM constructor c
+            LEFT JOIN country co ON c.country_id = co.id
+            WHERE c.id = %s
+        """
+        db.execute(query, (constructor_id,))
+        constructor = db.fetchone()
+        
+        if not constructor:
+            return jsonify({'error': 'Constructor not found'}), 404
+        
+        # Convert to dict and handle Decimal types
+        result = dict(constructor)
+        if 'total_points' in result and result['total_points'] is not None:
+            result['total_points'] = float(result['total_points'])
+            
+        print(f"Returning constructor data: {result}")  # Debug log
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error fetching constructor: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()

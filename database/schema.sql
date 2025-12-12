@@ -64,6 +64,7 @@ CREATE INDEX circuit_country_id_idx ON circuit(country_id);
 -- Constructor/Teams
 CREATE TABLE constructor (
     id                           VARCHAR(100)  NOT NULL,
+    user_id                      VARCHAR(100)  DEFAULT NULL,
     country_id                   VARCHAR(100)  NOT NULL,
     name                         VARCHAR(100)  NOT NULL,
     full_name                    VARCHAR(100)  NOT NULL,
@@ -75,7 +76,8 @@ CREATE TABLE constructor (
     total_pole_positions         INTEGER       NOT NULL,
     is_real                      BOOLEAN       DEFAULT TRUE,
     PRIMARY KEY (id),
-    FOREIGN KEY (country_id) REFERENCES country(id)
+    FOREIGN KEY (country_id) REFERENCES country(id),
+    FOREIGN KEY (user_id)    REFERENCES "user"(id)
 );
 
 CREATE INDEX constructor_name_idx ON constructor(name);
