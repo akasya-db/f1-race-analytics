@@ -135,16 +135,104 @@ def add_race_page():
     db = DatabaseConnection()
     try:
         # Get all countries for the dropdown
-        # country selection form database to show in add-race page - will be added
+        db.execute("SELECT id, name FROM country ORDER BY name")
         countries = db.fetchall()
+
+        # Get all circuits for the dropdown
+        db.execute("SELECT id, name, full_name FROM circuit ORDER BY name")
+        circuits = db.fetchall()
 
         return render_template(
             "add_race.html",
             authenticated=authenticated,
             username=session.get('username'),
             is_admin=session.get('is_admin', False),
-            countries=countries
+            countries=countries,
+            circuits=circuits
         )
+    finally:
+        db.close()
+
+
+@races_bp.route("/api/add-race", methods=["POST"])
+def add_race():
+    if 'username' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        user_id = session.get('user_id')
+        
+        db = DatabaseConnection()
+        
+        # Get the next race ID
+        db.execute("SELECT MAX(id) as max_id FROM race")
+        result = db.fetchone()
+        next_id = (result['max_id'] or 0) + 1 if result else 1
+        
+        # Insert race
+        insert_query = """
+            INSERT INTO race (
+                id, circuit_id, year, round, date, official_name,
+                qualifying_format, laps, qualifying_date, is_real, user_id
+            ) VALUES (
+                %(id)s, %(circuit_id)s, %(year)s, %(round)s, %(date)s, %(official_name)s,
+                %(qualifying_format)s, %(laps)s, %(qualifying_date)s, FALSE, %(user_id)s
+            )
+        """
+        
+        params = {
+            'id': next_id,
+            'circuit_id': data['circuit_id'],
+            'year': data['year'],
+            'round': data['round'],
+            'date': data['date'],
+            'official_name': data['official_name'],
+            'qualifying_format': data['qualifying_format'],
+            'laps': data['laps'],
+            'qualifying_date': data.get('qualifying_date') or None,
+            'user_id': user_id
+        }
+        
+        db.execute(insert_query, params)
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'race_id': next_id,
+            'message': 'Race added successfully'
+        })
+        
+    except Exception as e:
+        print(f"Error adding race: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@races_bp.route("/api/races/<int:race_id>")
+def get_race_by_id(race_id):
+    """Get a single race by ID"""
+    db = DatabaseConnection()
+    try:
+        db.execute("""
+            SELECT r.id, r.year, r.round, r.date, r.official_name,
+                   r.qualifying_format, r.laps, r.qualifying_date,
+                   c.name as circuit_name, co.name as country_name
+            FROM race r
+            LEFT JOIN circuit c ON r.circuit_id = c.id
+            LEFT JOIN country co ON c.country_id = co.id
+            WHERE r.id = %(race_id)s
+        """, {'race_id': race_id})
+        result = db.fetchone()
+        
+        if not result:
+            return jsonify({'error': 'Race not found'}), 404
+            
+        return jsonify(dict(result))
+    except Exception as e:
+        print(f"Error fetching race: {e}")
+        return jsonify({'error': str(e)}), 500
     finally:
         db.close()
 

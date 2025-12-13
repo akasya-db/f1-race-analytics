@@ -132,8 +132,9 @@ CREATE TABLE race (
     laps                 INT          NOT NULL,
     qualifying_date      DATE,
     is_real              BOOLEAN      DEFAULT TRUE,
+    user_id              VARCHAR(100)  DEFAULT NULL,
 
-    
+    FOREIGN KEY (user_id)    REFERENCES "user"(id),
     UNIQUE (year, round)
 );
 

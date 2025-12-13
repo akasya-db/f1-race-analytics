@@ -160,8 +160,100 @@
               </svg>
             </div>
             <div class="section-content" id="race-section" style="display:none;">
-              <p class="input-hint">Race form coming soon</p>
-              <button type="button" class="btn-primary" onclick="saveRace()">Save Race</button>
+
+              <!-- Mode toggle -->
+              <div class="mode-toggle" role="tablist" aria-label="Race mode">
+                <button type="button" class="mode-btn active" data-mode="custom"
+                        onclick="setRaceMode('custom')" aria-selected="true">
+                  Add custom race
+                </button>
+                <button type="button" class="mode-btn" data-mode="existing"
+                        onclick="setRaceMode('existing')" aria-selected="false">
+                  Select existing race
+                </button>
+              </div>
+
+              <!-- Mode: custom -->
+              <div id="race-mode-custom">
+                <form id="raceForm">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="race_circuit">Circuit*</label>
+                      <select id="race_circuit" name="race_circuit" required>
+                        <option value="">Select a circuit</option>
+                        {% for circuit in circuits %}
+                          <option value="{{ circuit.id }}">{{ circuit.name }} ({{ circuit.full_name }})</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="race_official_name">Official Name*</label>
+                      <input type="text" id="race_official_name" name="race_official_name" required placeholder="e.g., 2024 Monaco Grand Prix"/>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="race_year">Year*</label>
+                      <input type="number" id="race_year" name="race_year" required min="1950" placeholder="e.g., 2024"/>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="race_round">Round*</label>
+                      <input type="number" id="race_round" name="race_round" required min="1" placeholder="e.g., 1"/>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="race_date">Race Date*</label>
+                      <input type="date" id="race_date" name="race_date" required/>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="race_qualifying_format">Qualifying Format*</label>
+                      <select id="race_qualifying_format" name="race_qualifying_format" required>
+                        <option value="">Select format</option>
+                        <option value="KNOCKOUT">Knockout</option>
+                        <option value="SPRINT_RACE">Sprint Race</option>
+                        <option value="ONE_SESSION">One Session</option>
+                        <option value="TWO_SESSION">Two Session</option>
+                        <option value="FOUR_LAPS">Four Laps</option>
+                        <option value="AGGREGATE">Aggregate</option>
+                      </select>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="race_laps">Laps*</label>
+                      <input type="number" id="race_laps" name="race_laps" required min="1" placeholder="e.g., 78"/>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="race_qualifying_date">Qualifying Date</label>
+                      <input type="date" id="race_qualifying_date" name="race_qualifying_date"/>
+                      <p class="input-hint">Optional</p>
+                    </div>
+                  </div>
+                  <button type="button" class="btn-primary" onclick="saveRace()">Save Race</button>
+                </form>
+              </div>
+
+              <!-- Mode: existing -->
+              <div id="race-mode-existing" style="display:none;">
+                <div class="form-grid">
+                  <div class="form-group" style="grid-column:1 / -1;">
+                    <label for="raceSearch">Find race</label>
+                    <input type="text" id="raceSearch" placeholder="Type to search races by name..."/>
+                    <p class="input-hint">Start typing to search. Results load from the database.</p>
+                  </div>
+                  <div class="form-group" style="grid-column:1 / -1;">
+                    <label for="existingRaceSelect">Results</label>
+                    <select id="existingRaceSelect" size="6">
+                      <!-- options will be populated by JS -->
+                    </select>
+                    <p class="input-hint">Select one and save.</p>
+                  </div>
+                </div>
+                <button type="button" class="btn-primary" onclick="saveExistingRace()">Save Selected Race</button>
+              </div>
+
             </div>
           </div>
 

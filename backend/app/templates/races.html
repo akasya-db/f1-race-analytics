@@ -29,12 +29,7 @@
     <form id="raceFilters" class="filter-bar">
       <div class="filter-group">
         <label for="filterYear">Year</label>
-        <select id="filterYear" name="year">
-          <option value="">All</option>
-          <option value="2023">2023</option>
-          <option value="2024">2024</option>
-          <option value="2025">2025</option>
-        </select>
+        <input type="number" id="filterYear" name="year" min="1950" placeholder="Any"/>
       </div>
 
       <div class="filter-group">
@@ -63,18 +58,13 @@
         <label for="filterQualifyingFormat">Qualifying format</label>
         <select id="filterQualifyingFormat">
           <option value="">All</option>
-          <option value="standard">Standard</option>
-          <option value="sprint">Sprint</option>
+          <option value="KNOCKOUT">Knockout</option>
+          <option value="SPRINT_RACE">Sprint Race</option>
+          <option value="ONE_SESSION">One Session</option>
+          <option value="TWO_SESSION">Two Session</option>
+          <option value="FOUR_LAPS">Four Laps</option>
+          <option value="AGGREGATE">Aggregate</option>
         </select>
-      </div>
-
-      <div class="filter-group">
-        <label>Laps</label>
-        <div class="filter-inline">
-          <input type="number" id="filterLapsMin" min="0" placeholder="Min"/>
-          <span>–</span>
-          <input type="number" id="filterLapsMax" min="0" placeholder="Max"/>
-        </div>
       </div>
 
       <div class="filter-group checkbox-group">
@@ -102,7 +92,6 @@
     <div class="modal-content">
       <button class="modal-close" onclick="closeRaceModal()">×</button>
       <div class="modal-header">
-        <img class="modal-logo" id="modalFlag" src="/placeholder.svg" alt="Circuit Image"/>
         <div>
           <h2 class="modal-title" id="modalTitle"></h2>
           <p class="modal-subtitle" id="modalSubtitle"></p>

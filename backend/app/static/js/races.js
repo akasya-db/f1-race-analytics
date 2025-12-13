@@ -12,8 +12,6 @@ async function fetchRaces(page = 1) {
   const dateTo = document.getElementById('filterDateTo')?.value || '';
   const officialName = document.getElementById('filterOfficialName')?.value || '';
   const qualifyingFormat = document.getElementById('filterQualifyingFormat')?.value || '';
-  const lapsMin = document.getElementById('filterLapsMin')?.value || '';
-  const lapsMax = document.getElementById('filterLapsMax')?.value || '';
   const isRealChecked = document.getElementById('filterIsReal')?.checked || false;
   
   // create URL parameters
@@ -25,8 +23,6 @@ async function fetchRaces(page = 1) {
   if (dateTo) params.append('date_to', dateTo);
   if (officialName) params.append('official_name', officialName);
   if (qualifyingFormat) params.append('qualifying_format', qualifyingFormat);
-  if (lapsMin) params.append('laps_min', lapsMin);
-  if (lapsMax) params.append('laps_max', lapsMax);
   if (isRealChecked) params.append('is_real', 'true');
 
   try {
@@ -59,9 +55,6 @@ function renderRaces(list) {
     .map((race) => {
       return `
       <div class="card" onclick="openRaceModal(${race.id})">
-        <div class="logo-wrapper">
-          <img class="logo" src="/static/img/placeholder_track.png" alt="${race.circuit_name} layout"/>
-        </div>
         <div class="team-info">
           <div class="name">${race.official_name || race.circuit_name}</div>
           <div class="nation">${race.country} • ${race.circuit_name}</div>

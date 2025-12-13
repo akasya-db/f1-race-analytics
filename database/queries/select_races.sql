@@ -1,6 +1,8 @@
 SELECT 
     r.id,
     c.full_name AS circuit_name,
+    co.name AS country,
+    c.place_name AS location,
     r.year,
     r.round,
     r.date,
@@ -12,8 +14,10 @@ SELECT
     COUNT(*) OVER() as full_count
 FROM
     race r
-JOIN
+LEFT JOIN
     circuit c ON r.circuit_id = c.id
+LEFT JOIN
+    country co ON c.country_id = co.id
 WHERE
     (%(year)s IS NULL OR r.year = %(year)s)
     AND
