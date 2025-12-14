@@ -2,6 +2,7 @@
 let currentRaces = [];
 let currentPage = 1;
 
+
 async function fetchRaces(page = 1) {
   currentPage = page;
 
@@ -53,12 +54,15 @@ function renderRaces(list) {
 
   grid.innerHTML = list
     .map((race) => {
-      // Link to dedicated race detail page instead of opening a modal
+      const circuitLocation = [race.circuit_place_name, race.circuit_country].filter(Boolean).join(' • ');
+      const circuitButton = race.circuit_id
+        ? `<a class="btn secondary" href="/circuits/${race.circuit_id}">View Circuit</a>`
+        : '';
       return `
-      <a class="card" href="/races/${race.id}">
+      <div class="card">
         <div class="team-info">
           <div class="name">${race.official_name || race.circuit_name}</div>
-          <div class="nation">${race.country}  ${race.circuit_name}</div>
+          <div class="nation">${circuitLocation || 'Location TBD'}</div>
           <div class="stats">
             <div class="stat-item">
               <span class="stat-label">Year</span>
@@ -74,8 +78,11 @@ function renderRaces(list) {
             </div>
           </div>
         </div>
-        <button class="btn">View Race</button>
-      </a>
+        <div class="card-actions">
+          <a class="btn" href="/races/${race.id}">View Race</a>
+          ${circuitButton}
+        </div>
+      </div>
       `;
     })
     .join('');

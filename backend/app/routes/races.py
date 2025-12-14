@@ -34,6 +34,17 @@ def race_detail_page(race_id):
         race_id=race_id
     )
 
+@races_bp.route("/circuits/<circuit_id>")
+def circuit_detail_page(circuit_id):
+    """Render dedicated circuit detail page."""
+    authenticated = 'username' in session
+    return render_template(
+        "circuit_detail.html",
+        authenticated=authenticated,
+        username=session.get('username'),
+        is_admin=session.get('is_admin', False),
+        circuit_id=circuit_id
+    )
 # API route fetches the data
 @races_bp.route("/api/races")
 def get_races_data():
@@ -229,9 +240,19 @@ def get_race_by_id(race_id):
     db = DatabaseConnection()
     try:
         db.execute("""
-            SELECT r.id, r.year, r.round, r.date, r.official_name,
-                   r.qualifying_format, r.laps, r.qualifying_date,
-                   c.name as circuit_name, co.name as country_name
+            SELECT 
+                r.id, r.circuit_id, r.year, r.round, r.date, r.official_name,
+                r.qualifying_format, r.laps, r.qualifying_date,
+                c.full_name AS circuit_name,
+                c.place_name AS circuit_place_name,
+                c.length AS circuit_length,
+                c.turns AS circuit_turns,
+                c.type AS circuit_type,
+                c.direction AS circuit_direction,
+                c.total_races_held AS circuit_total_races,
+                c.latitude AS circuit_latitude,
+                c.longitude AS circuit_longitude,
+                co.name AS circuit_country
             FROM race r
             LEFT JOIN circuit c ON r.circuit_id = c.id
             LEFT JOIN country co ON c.country_id = co.id
@@ -245,6 +266,73 @@ def get_race_by_id(race_id):
         return jsonify(dict(result))
     except Exception as e:
         print(f"Error fetching race: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+@races_bp.route("/api/circuits/<circuit_id>")
+def get_circuit_by_id(circuit_id):
+    """Get circuit details by ID."""
+    db = DatabaseConnection()
+    try:
+        db.execute("""
+            SELECT 
+                c.id,
+                c.name,
+                c.full_name,
+                c.place_name,
+                c.type,
+                c.direction,
+                c.length,
+                c.turns,
+                c.total_races_held,
+                c.latitude,
+                c.longitude,
+                co.name AS country_name
+            FROM circuit c
+            LEFT JOIN country co ON c.country_id = co.id
+            WHERE c.id = %s
+        """, (circuit_id,))
+        row = db.fetchone()
+        if not row:
+            return jsonify({'error': 'Circuit not found'}), 404
+        return jsonify(dict(row))
+    except Exception as e:
+        print(f"Error fetching circuit: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+@races_bp.route("/api/circuits/<circuit_id>/races")
+def get_races_for_circuit(circuit_id):
+    """List races hosted at a given circuit."""
+    db = DatabaseConnection()
+    try:
+        query = """
+            SELECT 
+                r.id,
+                r.year,
+                r.round,
+                r.date,
+                r.official_name,
+                r.qualifying_format,
+                r.laps,
+                r.is_real,
+                (
+                    SELECT COUNT(*) 
+                    FROM race_data rd 
+                    WHERE rd.race_id = r.id
+                ) AS participant_count
+            FROM race r
+            WHERE r.circuit_id = %s
+            ORDER BY r.year DESC, r.round DESC
+        """
+        db.execute(query, (circuit_id,))
+        rows = db.fetchall()
+        data = [dict(row) for row in rows]
+        return jsonify({'races': data})
+    except Exception as e:
+        print(f"Error fetching circuit races: {e}")
         return jsonify({'error': str(e)}), 500
     finally:
         db.close()

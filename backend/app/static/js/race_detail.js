@@ -35,28 +35,81 @@ async function loadRaceDetail() {
   }
 }
 
+const formatValue = (value, suffix = '') => {
+  if (value === null || value === undefined || value === '') return 'N/A';
+  return suffix ? `${value}${suffix}` : value;
+};
+
+const formatDecimal = (value, digits = 3, suffix = '') => {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 'N/A';
+  return `${num.toFixed(digits)}${suffix}`;
+};
+
+const prettifyText = (value) => {
+  if (!value) return 'Unknown';
+  return value
+    .toString()
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+};
+
 function renderRaceInfo(r) {
   const el = document.getElementById('raceInfo');
   if (!el) return;
 
   el.innerHTML = `
     <h2>${r.official_name || r.circuit_name}</h2>
-    <p><strong>Year:</strong> ${r.year}</p>
-    <p><strong>Round:</strong> ${r.round}</p>
-    <p><strong>Date:</strong> ${r.date}</p>
-  <p><strong>Format:</strong> ${r.qualifying_format || 'Standard'}</p>
+    <p><strong>Year:</strong> ${formatValue(r.year)}</p>
+    <p><strong>Round:</strong> ${formatValue(r.round)}</p>
+    <p><strong>Date:</strong> ${formatValue(r.date)}</p>
+    <p><strong>Format:</strong> ${prettifyText(r.qualifying_format)}</p>
+    <p><strong>Laps:</strong> ${formatValue(r.laps)}</p>
   `;
 
-  // also populate circuit box with quick info
   const c = document.getElementById('circuitInfo');
-  if (c) {
-    c.innerHTML = `
-      <h3>${r.circuit_name || 'Circuit'}</h3>
-      <p><strong>Country:</strong> ${r.country_name || r.country || '-'}</p>
-      <p><strong>Location:</strong> ${r.location || '-'}</p>
-      <p><strong>Full name:</strong> ${r.full_name || '-'}</p>
-    `;
-  }
+  if (!c) return;
+
+  const location = [r.circuit_place_name, r.circuit_country].filter(Boolean).join(' • ');
+  const stats = [
+    { label: 'Length', value: formatDecimal(r.circuit_length, 3, ' km') },
+    { label: 'Turns', value: formatValue(r.circuit_turns) },
+    { label: 'Direction', value: prettifyText(r.circuit_direction) },
+    { label: 'Type', value: prettifyText(r.circuit_type) },
+    { label: 'Total races', value: formatValue(r.circuit_total_races) },
+    {
+      label: 'Coordinates',
+      value:
+        Number.isFinite(Number(r.circuit_latitude)) &&
+        Number.isFinite(Number(r.circuit_longitude))
+          ? `${Number(r.circuit_latitude).toFixed(3)}, ${Number(r.circuit_longitude).toFixed(3)}`
+          : 'N/A'
+    }
+  ];
+
+  c.innerHTML = `
+    <h3>${r.circuit_name || 'Circuit'}</h3>
+    <p class="circuit-location">${location || 'Location unknown'}</p>
+    <div class="circuit-stats-grid">
+      ${stats
+        .map(
+          (item) => `
+        <div class="circuit-stat">
+          <span class="label">${item.label}</span>
+          <span class="value">${item.value}</span>
+        </div>
+      `
+        )
+        .join('')}
+    </div>
+    ${
+      r.circuit_id
+        ? `<div class="detail-actions"><a class="btn secondary" href="/circuits/${r.circuit_id}">View Circuit Detail</a></div>`
+        : ''
+    }
+  `;
 }
 
 function renderResults(rows) {

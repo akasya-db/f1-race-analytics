@@ -1,8 +1,6 @@
 SELECT 
     r.id,
-    c.full_name AS circuit_name,
-    co.name AS country,
-    c.place_name AS location,
+    r.circuit_id,
     r.year,
     r.round,
     r.date,
@@ -11,6 +9,16 @@ SELECT
     r.laps,
     r.qualifying_date,
     r.is_real,
+    c.full_name AS circuit_name,
+    co.name AS circuit_country,
+    c.place_name AS circuit_place_name,
+    c.length AS circuit_length,
+    c.turns AS circuit_turns,
+    c.type AS circuit_type,
+    c.direction AS circuit_direction,
+    c.total_races_held AS circuit_total_races,
+    c.latitude AS circuit_latitude,
+    c.longitude AS circuit_longitude,
     COUNT(*) OVER() as full_count
 FROM
     race r

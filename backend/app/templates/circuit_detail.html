@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Circuit Detail — F1 Race Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/listing.css"/>
+  <link rel="stylesheet" href="/static/css/navbar.css"/>
+  <link rel="stylesheet" href="/static/css/circuit_detail.css"/>
+</head>
+<body>
+  {% include "navbar.html" %}
+  <main class="circuit-page">
+    <section class="circuit-hero">
+      <div class="hero-header">
+        <p class="eyebrow">Circuit Insight</p>
+        <h1 id="circuitName">Loading...</h1>
+        <p id="circuitLocation" class="hero-subtext"></p>
+      </div>
+      <div class="hero-stats" id="circuitHeroStats"></div>
+    </section>
+
+    <section class="detail-card circuit-overview">
+      <div id="circuitOverview"></div>
+    </section>
+
+    <section class="detail-card circuit-map">
+      <h3>Track Map</h3>
+      <div class="map-box" id="circuitMap"></div>
+    </section>
+
+    <section class="detail-card circuit-races">
+      <h3>Races Hosted Here</h3>
+      <div id="circuitRaces" class="race-list"></div>
+    </section>
+  </main>
+
+  <script src="/static/js/navbar.js"></script>
+  <script>
+    window.__CIRCUIT_ID__ = "{{ circuit_id }}";
+  </script>
+  <script src="/static/js/circuit_detail.js"></script>
+</body>
+</html>

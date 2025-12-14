@@ -1,0 +1,171 @@
+:root{
+  --panel-bg: rgba(15,21,28,0.85);
+}
+
+.circuit-page{
+  padding-top:90px;
+  color:var(--f1-white);
+}
+
+.circuit-hero{
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+  background:linear-gradient(135deg, rgba(255,30,21,0.12), rgba(0,0,0,0.4));
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,0.08);
+  margin:0 clamp(16px,4vw,60px);
+  padding:32px;
+}
+
+.hero-header h1{
+  margin:0;
+  font-size:clamp(32px,5vw,56px);
+}
+
+.hero-subtext{
+  color:var(--f1-grey);
+  margin-top:6px;
+}
+
+.hero-stats{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+}
+
+.stat-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+}
+
+.detail-card{
+  background:#0f151c;
+  border-radius:20px;
+  padding:24px;
+  border:1px solid rgba(255,255,255,0.04);
+  box-shadow:0 14px 28px rgba(0,0,0,0.4);
+}
+
+.detail-card h3{
+  margin-top:0;
+}
+
+.stat-chip{
+  flex:1 1 180px;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:14px;
+}
+
+.stat-chip .label{
+  font-size:11px;
+  letter-spacing:0.6px;
+  color:var(--f1-grey);
+  text-transform:uppercase;
+}
+
+.stat-chip .value{
+  font-size:18px;
+  font-weight:600;
+}
+
+.circuit-overview{
+  margin:24px clamp(16px,4vw,60px) 0;
+}
+
+.circuit-map{
+  margin:24px clamp(16px,4vw,60px) 60px;
+}
+
+.map-box{
+  height:420px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.08);
+  overflow:hidden;
+  background:rgba(255,255,255,0.03);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.map-box iframe{
+  width:100%;
+  height:100%;
+  border:0;
+  border-radius:12px;
+  transform-origin:center;
+  animation:mapGlide 1.8s ease forwards;
+}
+
+.map-placeholder{
+  color:var(--f1-grey);
+  font-size:14px;
+  text-align:center;
+  padding:24px;
+}
+
+@keyframes mapGlide{
+  0%{transform:scale(1.2); filter:brightness(0.75);}
+  100%{transform:scale(1); filter:brightness(1);}
+}
+
+.race-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  margin-top:16px;
+}
+
+.race-pill{
+  display:grid;
+  grid-template-columns:2fr 1fr auto;
+  align-items:center;
+  gap:18px;
+  padding:14px 18px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.02);
+  text-decoration:none;
+  color:inherit;
+}
+
+.race-pill .title{
+  font-weight:600;
+  font-size:15px;
+}
+
+.race-pill .info .meta{
+  font-size:13px;
+  color:var(--f1-grey);
+}
+
+.race-pill .meta.participants{
+  font-size:16px;
+  font-weight:600;
+  justify-self:center;
+  color:var(--f1-white);
+}
+
+.race-pill .badge{
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.1);
+  font-size:12px;
+  text-transform:uppercase;
+}
+
+.race-pill .badge.fake{
+  color:var(--f1-yellow);
+}
+
+.race-pill .badge.real{
+  color:var(--f1-green);
+}
+
+@media (max-width: 768px){
+  .hero-stats{
+    flex-direction:column;
+  }
+}

@@ -309,22 +309,21 @@
       user-select:none;
     }
 
-    .btn::before{
-      content:'→';
-      position:absolute;
-      right:20px;
-      opacity:0;
-      transition:opacity .2s ease, right .2s ease;
-    }
-
-    .btn:hover::before{
-      opacity:1;
-      right:15px;
+    .btn.secondary{
+      background:linear-gradient(180deg,#202b36,#141c24);
+      border:1px solid rgba(255,255,255,0.15);
     }
 
     .btn:hover{
       transform:translateY(-2px) translateX(2px);
       filter:saturate(1.2) brightness(1.1);
+    }
+
+    .card-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
     }
 
 /* When cards are rendered as anchors (a.card), ensure they don't use default link styles */
