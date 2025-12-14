@@ -327,6 +327,12 @@
       filter:saturate(1.2) brightness(1.1);
     }
 
+/* When cards are rendered as anchors (a.card), ensure they don't use default link styles */
+a.card, a.card:visited, a.card:hover, a.card:active {
+  color: inherit;
+  text-decoration: none;
+}
+
     /* Modal styles */
     .modal{
       display:none;

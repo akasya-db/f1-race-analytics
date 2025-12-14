@@ -53,11 +53,12 @@ function renderRaces(list) {
 
   grid.innerHTML = list
     .map((race) => {
+      // Link to dedicated race detail page instead of opening a modal
       return `
-      <div class="card" onclick="openRaceModal(${race.id})">
+      <a class="card" href="/races/${race.id}">
         <div class="team-info">
           <div class="name">${race.official_name || race.circuit_name}</div>
-          <div class="nation">${race.country} • ${race.circuit_name}</div>
+          <div class="nation">${race.country}  ${race.circuit_name}</div>
           <div class="stats">
             <div class="stat-item">
               <span class="stat-label">Year</span>
@@ -74,7 +75,7 @@ function renderRaces(list) {
           </div>
         </div>
         <button class="btn">View Race</button>
-      </div>
+      </a>
       `;
     })
     .join('');
@@ -151,120 +152,10 @@ function setupFilters() {
 }
 
 
-async function openRaceModal(raceId) {
-  const race = currentRaces.find((r) => r.id == raceId);
-  if (!race) return;
+// Note: Modal functionality removed. Cards now link to a dedicated page at /races/<id>
 
-  const modal = document.getElementById('raceModal');
-  const titleEl = document.getElementById('modalTitle');
-  const subtitleEl = document.getElementById('modalSubtitle');
-  const bodyEl = document.getElementById('modalBody');
-
-  if (!modal) return;
-
-  titleEl.textContent = race.circuit_name; // veya race.official_name
-  subtitleEl.textContent = `${race.official_name} • ${race.year}`;
-
-  // Modal İçeriği
-  bodyEl.innerHTML = `
-    <div class="modal-top">
-      <p class="modal-description single-line">
-         <a href="${race.circuit_url}" target="_blank" style="color:#e10600">More info on Wikipedia</a>
-      </p>
-    </div>
-
-    <div class="modal-stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">📅</div>
-        <div class="stat-content">
-          <div class="stat-label">Year</div>
-          <div class="stat-value">${race.year}</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📍</div>
-        <div class="stat-content">
-          <div class="stat-label">Location</div>
-          <div class="stat-value">${race.location}, ${race.country}</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">🏁</div>
-        <div class="stat-content">
-          <div class="stat-label">Format</div>
-          <div class="stat-value">${race.qualifying_format || 'Standard'}</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📏</div>
-        <div class="stat-content">
-          <div class="stat-label">Length</div>
-          <div class="stat-value">${race.course_length ? race.course_length + ' km' : '-'}</div>
-        </div>
-      </div>
-    </div>
-    
-    <div id="modalResults">
-        <p class="loading">Loading results...</p>
-    </div>
-  `;
-  modal.classList.add('active');
-
-  // Fetch and render race_data for this race
-  const resultsEl = document.getElementById('modalResults');
-  if (!resultsEl) return;
-
-  try {
-    // show loading (already present)
-    const payload = await window.fetchRaceData({ raceId: raceId, page: 1 });
-    const rows = payload?.race_data || [];
-
-    if (!rows || rows.length === 0) {
-      resultsEl.innerHTML = '<p class="empty-state">No results available for this race.</p>';
-      return;
-    }
-
-    // Render a simple results table
-    const tableHtml = [];
-    tableHtml.push('<table class="results-table">');
-    tableHtml.push('<thead><tr><th>#</th><th>Driver</th><th>Constructor</th><th>No</th><th>Grid</th><th>Qual</th><th>Points</th></tr></thead>');
-    tableHtml.push('<tbody>');
-
-    for (const r of rows) {
-      tableHtml.push(`
-        <tr>
-          <td>${r.position_display_order ?? '-'}</td>
-          <td>${r.driver_name ?? r.driver_id}</td>
-          <td>${r.constructor_name ?? r.constructor_id}</td>
-          <td>${r.driver_number ?? '-'}</td>
-          <td>${r.race_grid_position_number ?? '-'}</td>
-          <td>${r.race_qualification_position_number ?? '-'}</td>
-          <td>${r.race_points ?? '-'}</td>
-        </tr>
-      `);
-    }
-
-    tableHtml.push('</tbody></table>');
-    resultsEl.innerHTML = tableHtml.join('');
-
-  } catch (err) {
-    console.error('Error fetching race results for modal:', err);
-    resultsEl.innerHTML = '<p class="error-state">Unable to load race results. Please try again later.</p>';
-  }
-}
-
-function closeRaceModal() {
-  const modal = document.getElementById('raceModal');
-  if (modal) modal.classList.remove('active');
-}
-
-// Event Listeners
-document.getElementById('raceModal')?.addEventListener('click', (e) => {
-  if (e.target.id === 'raceModal') closeRaceModal();
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeRaceModal();
-});
+// Remove any remaining references to modal DOM elements in case they exist
+document.getElementById('raceModal')?.remove?.();
 
 // Başlat
 window.addEventListener('DOMContentLoaded', () => {

@@ -149,6 +149,7 @@ CREATE TABLE race_data (
     race_id                                 INT          NOT NULL,             -- FK race(id)
     driver_id                               VARCHAR(100) NOT NULL,             -- FK driver(id)
     constructor_id                          VARCHAR(100) NOT NULL,             -- FK constructor(id)
+    user_id                                 VARCHAR(100) DEFAULT NULL,         -- FK user(id)
     position_display_order                  INT          NOT NULL,
     driver_number                           VARCHAR(3)   NOT NULL,
     race_points                             DECIMAL(8,2),
@@ -157,6 +158,8 @@ CREATE TABLE race_data (
     race_grid_position_number               INT,
     is_real                                 BOOLEAN      DEFAULT FALSE,
     created_at                              TIMESTAMP    NOT NULL DEFAULT NOW(),
+
+    FOREIGN KEY (user_id)        REFERENCES "user"(id),
     FOREIGN KEY (constructor_id) REFERENCES constructor (id),
     FOREIGN KEY (driver_id)      REFERENCES driver      (id),
     FOREIGN KEY (race_id)        REFERENCES race        (id)

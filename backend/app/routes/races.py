@@ -21,6 +21,19 @@ def races_page():
         is_admin=session.get('is_admin', False)
     )
 
+
+@races_bp.route("/races/<int:race_id>")
+def race_detail_page(race_id):
+    """Render dedicated race detail page. The page will fetch race data via AJAX."""
+    authenticated = 'username' in session
+    return render_template(
+        "race_detail.html",
+        authenticated=authenticated,
+        username=session.get('username'),
+        is_admin=session.get('is_admin', False),
+        race_id=race_id
+    )
+
 # API route fetches the data
 @races_bp.route("/api/races")
 def get_races_data():

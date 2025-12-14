@@ -1,0 +1,57 @@
+/* race_detail.css - layout for race detail page */
+
+/* Make sure content sits below the absolute-positioned navbar */
+.content-wrapper {
+  padding-top: 90px; /* leave space for navbar (20px padding + logo height) */
+}
+
+.race-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px; /* main left column for race info + results, right column for circuit */
+  gap: 24px;
+  align-items: start;
+}
+
+.race-info {
+  grid-column: 1 / 2;
+}
+
+.circuit-info {
+  grid-column: 2 / 3;
+}
+
+.results-box {
+  grid-column: 1 / 3; /* span both columns */
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .race-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .results-box { grid-column: 1 / 2; }
+  .circuit-info { grid-column: 1 / 2; }
+}
+
+/* Small visual tweaks for the cards on detail page */
+.race-info h2, .circuit-info h3, .results-box h3 {
+  margin-top: 0;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.results-table thead th {
+  text-align:left;
+  padding:10px;
+  font-size:13px;
+  color:var(--f1-grey);
+}
+
+.results-table tbody td {
+  padding:10px;
+  border-top:1px solid rgba(255,255,255,0.04);
+}

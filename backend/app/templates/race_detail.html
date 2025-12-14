@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Race Detail 14 F1 Race Analytics</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/listing.css"/>
+  <link rel="stylesheet" href="/static/css/navbar.css"/>
+  <link rel="stylesheet" href="/static/css/race_detail.css"/>
+</head>
+<body>
+  {% include "navbar.html" %}
+
+  <div class="content-wrapper">
+    <div class="race-detail-grid">
+      <div class="race-info card" id="raceInfo">
+        <!-- Race basic info (top-left) -->
+      </div>
+
+      <div class="circuit-info card" id="circuitInfo">
+        <!-- Circuit info (top-right) -->
+      </div>
+
+      <div class="results-box card" id="resultsBox">
+        <!-- Results (bottom-left larger) -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/navbar.js"></script>
+  <script src="/static/js/race_detail.js"></script>
+</body>
+</html>
