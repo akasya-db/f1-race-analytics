@@ -22,6 +22,18 @@ def races_page():
     )
 
 
+@races_bp.route("/races/stats")
+def race_stats_page():
+    """Render dedicated race statistics page."""
+    authenticated = 'username' in session
+    return render_template(
+        "race_stats.html",
+        authenticated=authenticated,
+        username=session.get('username'),
+        is_admin=session.get('is_admin', False)
+    )
+
+
 @races_bp.route("/races/<int:race_id>")
 def race_detail_page(race_id):
     """Render dedicated race detail page. The page will fetch race data via AJAX."""
@@ -336,6 +348,65 @@ def get_races_for_circuit(circuit_id):
         return jsonify({'error': str(e)}), 500
     finally:
         db.close()
+
+@races_bp.route("/api/stats/races-by-year")
+def races_by_year():
+    """Return aggregated race statistics grouped by year with pagination and filtering."""
+    # Get filter parameters
+    raw_year = request.args.get('year')
+    raw_year_from = request.args.get('year_from')
+    raw_year_to = request.args.get('year_to')
+    raw_race_count_min = request.args.get('race_count_min')
+    raw_race_count_max = request.args.get('race_count_max')
+    raw_avg_laps_min = request.args.get('avg_laps_min')
+    raw_avg_laps_max = request.args.get('avg_laps_max')
+    raw_sort_by = request.args.get('sort_by', 'year')
+    raw_sort_dir = request.args.get('sort_dir', 'DESC')
+    
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    # Convert and validate parameters
+    params = {
+        'year': int(raw_year) if raw_year else None,
+        'year_from': int(raw_year_from) if raw_year_from else None,
+        'year_to': int(raw_year_to) if raw_year_to else None,
+        'race_count_min': int(raw_race_count_min) if raw_race_count_min else None,
+        'race_count_max': int(raw_race_count_max) if raw_race_count_max else None,
+        'avg_laps_min': float(raw_avg_laps_min) if raw_avg_laps_min else None,
+        'avg_laps_max': float(raw_avg_laps_max) if raw_avg_laps_max else None,
+        'sort_by': raw_sort_by if raw_sort_by in ['year', 'race_count', 'avg_laps'] else 'year',
+        'sort_dir': raw_sort_dir if raw_sort_dir in ['ASC', 'DESC'] else 'DESC',
+        'limit': per_page,
+        'offset': offset
+    }
+
+    db = DatabaseConnection()
+    try:
+        sql = get_sql_query('race_stats_by_year.sql')
+        db.execute(sql, params)
+        rows = db.fetchall()
+        data = [dict(r) for r in rows]
+        
+        total_items = data[0]['full_count'] if data else 0
+        total_pages = (total_items + per_page - 1) // per_page
+        
+        return jsonify({
+            'data': data,
+            'pagination': {
+                'current_page': page,
+                'total_pages': total_pages,
+                'total_items': total_items
+            }
+        })
+    except Exception as e:
+        print(f"Error fetching race stats: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
 
 @races_bp.route("/api/add-constructor", methods=["POST"])
 def add_constructor():

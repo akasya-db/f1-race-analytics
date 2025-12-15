@@ -267,8 +267,23 @@ async function submitAllData(){
         if(!res.ok) throw new Error(json.error || 'Failed to add constructor');
 
         messages.push('Constructor added successfully!');
+        // capture currently selected country label before reset (custom select may hide native select)
+        const constructorCountrySelect = document.getElementById('constructor_country');
+        const constructorCountryLabel = constructorCountrySelect?.selectedOptions[0]?.textContent || '-';
         document.getElementById('constructorForm').reset();
-        savedData.constructor = { mode:'existing', id: json.constructor_id, name: payload.name };
+        // Keep full details but mark as existing with the new ID
+        savedData.constructor = {
+          mode: 'existing',
+          id: json.constructor_id,
+          name: payload.name,
+          countryName: constructorCountryLabel,
+          best_championship_position: payload.best_championship_position,
+          total_championship_wins: payload.total_championship_wins,
+          total_race_starts: payload.total_race_starts,
+          total_podiums: payload.total_podiums,
+          total_points: payload.total_points,
+          total_pole_positions: payload.total_pole_positions
+        };
       } else {
         messages.push('Existing constructor selected.');
       }
@@ -287,8 +302,22 @@ async function submitAllData(){
         if(!res.ok) throw new Error(json.error || 'Failed to add race');
 
         messages.push('Race added successfully!');
+        // capture circuit label before reset
+        const raceCircuitSelect = document.getElementById('race_circuit');
+        const raceCircuitLabel = raceCircuitSelect?.selectedOptions[0]?.textContent || '-';
         document.getElementById('raceForm').reset();
-        savedData.race = { mode:'existing', id: json.race_id, official_name: payload.official_name };
+        // Keep full details but mark as existing with the new ID
+        savedData.race = {
+          mode: 'existing',
+          id: json.race_id,
+          official_name: payload.official_name,
+          year: payload.year,
+          round: payload.round,
+          date: payload.date,
+          circuit_name: raceCircuitLabel,
+          qualifying_format: payload.qualifying_format,
+          laps: payload.laps
+        };
       } else {
         messages.push('Existing race selected.');
       }
@@ -438,10 +467,86 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchRaceOptions('');
   }
 
+  // Enhance native selects with themed custom selects for better UI
+  enhanceThemedSelect('#constructor_country');
+  enhanceThemedSelect('#race_circuit');
+  enhanceThemedSelect('#race_qualifying_format');
+
   renderSummary();
 });
 
 // Simple debounce
 function debounce(fn, delay){
   let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+}
+
+/* Themed custom select replacement (basic) */
+function enhanceThemedSelect(selector){
+  const sel = document.querySelector(selector);
+  if(!sel || sel.dataset.themed === '1') return;
+
+  // Only replace single-selects (skip multi size lists)
+  if(sel.multiple) return;
+
+  sel.dataset.themed = '1';
+  sel.classList.add('themed-hidden-select');
+
+  const wrapper = document.createElement('div'); wrapper.className = 'custom-select-wrapper';
+  const trigger = document.createElement('button'); trigger.type = 'button'; trigger.className = 'custom-select-trigger';
+  trigger.setAttribute('aria-haspopup','listbox');
+  trigger.setAttribute('aria-expanded','false');
+
+  const labelSpan = document.createElement('span'); labelSpan.className = 'custom-select-label';
+  const arrow = document.createElement('span'); arrow.className = 'custom-select-arrow'; arrow.innerHTML = '\u25BE';
+  trigger.appendChild(labelSpan); trigger.appendChild(arrow);
+
+  const options = document.createElement('div'); options.className = 'custom-options'; options.style.display = 'none';
+
+  // Build options list
+  Array.from(sel.options).forEach((opt, idx) => {
+    const item = document.createElement('div');
+    item.className = 'custom-option' + (opt.disabled ? ' disabled' : '');
+    item.setAttribute('data-value', opt.value);
+    item.setAttribute('role','option');
+    item.textContent = opt.textContent;
+    if(opt.disabled) item.setAttribute('aria-disabled','true');
+    if(opt.selected) { item.classList.add('active'); labelSpan.textContent = opt.textContent; }
+    item.addEventListener('click', ()=>{
+      if(opt.disabled) return;
+      // sync to original select
+      sel.value = opt.value;
+      // update UI
+      options.querySelectorAll('.custom-option').forEach(o=>o.classList.remove('active'));
+      item.classList.add('active');
+      labelSpan.textContent = opt.textContent;
+      // close
+      options.style.display = 'none'; trigger.setAttribute('aria-expanded','false');
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    options.appendChild(item);
+  });
+
+  // default label
+  if(!labelSpan.textContent) labelSpan.textContent = sel.selectedOptions[0]?.textContent || sel.options[0]?.textContent || '';
+
+  trigger.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const open = options.style.display !== 'block';
+    // close other open selects
+    document.querySelectorAll('.custom-options').forEach(o=>o.style.display='none');
+    document.querySelectorAll('.custom-select-trigger').forEach(t=>t.setAttribute('aria-expanded','false'));
+    options.style.display = open ? 'block' : 'none';
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  // close when clicking outside
+  document.addEventListener('click', (e)=>{
+    if(!wrapper.contains(e.target)){
+      options.style.display = 'none'; trigger.setAttribute('aria-expanded','false');
+    }
+  });
+
+  wrapper.appendChild(trigger);
+  wrapper.appendChild(options);
+  sel.parentNode.insertBefore(wrapper, sel.nextSibling);
 }

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Race Statistics — F1 Race Analytics</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/listing.css"/>
+  <link rel="stylesheet" href="/static/css/navbar.css"/>
+</head>
+
+<body>
+  {% include "navbar.html" %}
+
+  <div class="hero-banner">
+    <div class="hero-content">
+      <h1 class="hero-title">Race Statistics</h1>
+      <p class="hero-subtitle">
+        Aggregated race counts and qualifying format breakdown by year.
+      </p>
+    </div>
+  </div>
+
+  <!-- Creative Filters -->
+  <div class="content-wrapper">
+    <form id="statsFilters" class="filter-bar">
+      <div class="filter-group">
+        <label for="filterStatsYear">Specific Year</label>
+        <input type="number" id="filterStatsYear" name="year" min="1950" placeholder="Any"/>
+      </div>
+
+      <div class="filter-group">
+        <label>Year Range</label>
+        <div class="filter-inline">
+          <span class="range-label">From</span>
+          <input type="number" id="filterYearFrom" name="year_from" min="1950" placeholder="1950"/>
+          <span class="range-label">To</span>
+          <input type="number" id="filterYearTo" name="year_to" min="1950" placeholder="2025"/>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>Race Count</label>
+        <div class="filter-inline">
+          <input type="number" id="filterRaceCountMin" name="race_count_min" min="1" placeholder="Min"/>
+          <span>–</span>
+          <input type="number" id="filterRaceCountMax" name="race_count_max" min="1" placeholder="Max"/>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>Average Laps</label>
+        <div class="filter-inline">
+          <input type="number" id="filterAvgLapsMin" name="avg_laps_min" step="0.1" placeholder="Min"/>
+          <span>–</span>
+          <input type="number" id="filterAvgLapsMax" name="avg_laps_max" step="0.1" placeholder="Max"/>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="sortBy">Sort by</label>
+        <select id="sortBy" name="sort_by">
+          <option value="year">Year</option>
+          <option value="race_count">Race Count</option>
+          <option value="avg_laps">Average Laps</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="sortDir">Order</label>
+        <select id="sortDir" name="sort_dir">
+          <option value="DESC">High to Low</option>
+          <option value="ASC">Low to High</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn">Apply Filters</button>
+        <button type="button" id="resetStatsFilters" class="btn btn-secondary">Reset All</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Statistics Table -->
+  <div class="content-wrapper">
+    <div class="stats-card" id="raceStatsPanel">
+      <div class="stats-header">
+        <h3>Statistics by year</h3>
+      </div>
+      <div class="stats-body" id="raceStatsBody">
+        <p class="loading">Loading statistics...</p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div id="statsPagination" class="pagination-container"></div>
+  </div>
+
+  <!-- Back link -->
+  <div class="content-wrapper" style="margin-top: 1rem;">
+    <a href="/races" class="btn btn-secondary">← Back to Races</a>
+  </div>
+
+  <script src="/static/js/navbar.js"></script>
+  <script src="/static/js/race_stats.js"></script>
+</body>
+</html>
