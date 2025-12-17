@@ -1,4 +1,4 @@
-v-- Select race_data rows for a given race with pagination
+-- Select race_data rows for a given race with pagination
 -- Params: race_id (required), is_real (optional boolean), limit, offset
 SELECT
   rd.id,

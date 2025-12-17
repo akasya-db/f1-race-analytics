@@ -9,11 +9,11 @@
   </a>
   <nav class="menu" aria-label="Main menu">
     {% if is_authenticated %}
-      <a href="{{ url_for('races.add_race_page') }}" class="add-race-btn">
+      <a href="{{ url_for('user.data_panel') }}" class="add-race-btn">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 5v14M5 12h14" stroke="white" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        Add Your Race
+        Data Panel
       </a>
       <div class="user-dropdown">
         <div class="user-dropdown-toggle" onclick="toggleDropdown()">

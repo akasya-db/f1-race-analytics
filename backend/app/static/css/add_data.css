@@ -1,0 +1,249 @@
+:root {
+  --f1-red: #ff1e15;
+  --f1-red-dark: #c20f09;
+  --f1-black: #07090c;
+  --f1-dark: #0b1118;
+  --f1-white: #f6f8fb;
+  --f1-grey: #a9bdd1;
+  --f1-green: #00e08d; /* Added from admin for edit hover */
+}
+
+/* 1. Global Reset & Background */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(1300px 800px at 18% 8%, #1a2632 0%, #0b0f14 55%, #07090c 100%) no-repeat fixed;
+  color: var(--f1-white);
+  font-family: Poppins, system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* 2. Containers & Header */
+.panel-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.panel-header {
+  background: linear-gradient(135deg, rgba(255, 30, 21, 0.15) 0%, rgba(194, 15, 9, 0.08) 40%, transparent 70%),
+              linear-gradient(to right, #0f151c 0%, #1a2128 50%, #0d1116 100%);
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 30px;
+  margin-top: 50px;
+  border: 1px solid rgba(255, 30, 21, 0.2);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.45);
+}
+
+.panel-header h1 {
+  font-family: Montserrat, sans-serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 900;
+  margin: 0 0 8px 0;
+  background: linear-gradient(to right, var(--f1-white) 0%, var(--f1-grey) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.panel-header p {
+  color: var(--f1-grey);
+  margin: 0;
+  font-size: 16px;
+}
+
+/* 3. Reusable Table Style (The "Admin Table" look) */
+.table-wrapper {
+  background: #0f151c;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
+}
+
+.panel-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--f1-white);
+}
+
+.panel-table thead {
+  background: rgba(255, 30, 21, 0.1);
+  border-bottom: 2px solid rgba(255, 30, 21, 0.3);
+}
+
+.panel-table th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: Montserrat, sans-serif;
+}
+
+.panel-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+  color: var(--f1-grey);
+}
+
+.panel-table tbody tr:hover {
+  background: rgba(255, 30, 21, 0.05);
+}
+
+/* 4. Action Buttons (Admin-style Buttons) */
+.btn-panel {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: Poppins;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-panel-primary {
+  background: linear-gradient(180deg, #ff5149, var(--f1-red));
+  color: white;
+  box-shadow: 0 8px 16px rgba(255, 30, 21, 0.3);
+}
+
+.btn-panel-primary:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.2) brightness(1.1);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: var(--f1-grey);
+}
+
+.btn-icon:hover { transform: scale(1.15); }
+.btn-edit:hover { color: var(--f1-green); background: rgba(0, 224, 141, 0.1); }
+.btn-delete:hover { color: var(--f1-red); background: rgba(255, 30, 21, 0.1); }
+
+/* 5. Empty State & Grid cards (from your original) */
+.empty-state {
+  background: #0f151c;
+  border-radius: 18px;
+  padding: 60px 40px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+  gap: 24px;
+}
+
+.action-card {
+  background: #0f151c;
+  border-radius: 18px;
+  padding: 32px;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+.action-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255, 30, 21, 0.4);
+}
+
+/* --- Data Entry Form Styles (Admin-Style) --- */
+.data-entry-form {
+  background: #0f151c;
+  border-radius: 18px;
+  padding: 32px;
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--f1-white);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-family: Montserrat, sans-serif;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  max-width: 250px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--f1-white);
+  font-size: 15px;
+  font-family: Poppins, sans-serif;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--f1-red);
+  box-shadow: 0 0 0 3px rgba(255, 30, 21, 0.15);
+}
+
+.form-actions {
+  grid-column: 1 / -1; /* Ensures buttons span full width of the grid */
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.info-text {
+  color: var(--f1-grey);
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* Override for select dropdown options */
+.form-group select option {
+  background: #1a2128;
+  color: white;
+}

@@ -35,12 +35,14 @@ def create_app():
     from app.routes.races import races_bp
     from app.routes.drivers import drivers_bp
     from app.routes.admin import admin_bp
+    from app.routes.user import user_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(constructors_bp)
     app.register_blueprint(races_bp)
     app.register_blueprint(drivers_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(user_bp)
 
     @app.context_processor
     def inject_user_context():

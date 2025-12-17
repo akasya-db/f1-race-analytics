@@ -1,0 +1,49 @@
+from flask import Blueprint, jsonify, render_template, request, session
+from app.database import DatabaseConnection  # Import your wrapper
+
+user_bp = Blueprint('user', __name__)
+
+@user_bp.route('/data-panel')
+def data_panel():
+    """Main hub for user data management"""
+    user_modules = {
+        'constructors': {
+            'name': 'Constructors',
+            'route': 'user.user_constructors_list', 
+            'description': 'Manage your custom racing teams and performance stats.',
+            'svg_path': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>'
+        }
+    }
+    return render_template('add_data.html', user_modules=user_modules)
+
+# app/routes/user.py
+# app/routes/user.py
+
+@user_bp.route('/my-constructors')
+def user_constructors_list():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        
+    db = DatabaseConnection()
+    records = []
+    schema = []
+    
+    try:
+        user_id = session.get('user_id')
+        query = "SELECT * FROM constructor WHERE id LIKE 'uc-%%' AND user_id = %s ORDER BY name ASC"
+        db.execute(query, (user_id,))
+        records = db.fetchall()
+        
+        if db.cursor.description:
+            schema = [desc[0] for desc in db.cursor.description]
+    except Exception as e:
+        # If this prints in your terminal, the query failed (e.g., missing column)
+        print(f"DEBUG ERROR: {e}") 
+    finally:
+        db.close()
+
+    # MUST BE OUTSIDE THE TRY/EXCEPT/FINALLY BLOCKS
+    return render_template('user_table_list.html', 
+                           records=records, 
+                           schema=schema, 
+                           title="My Constructors")

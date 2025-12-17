@@ -352,8 +352,11 @@ function renderSummary(){
         ? countrySelect.querySelector(`option[value="${c.country_id}"]`)?.textContent || c.country_id
         : '-';
       parts.push(`
-        <div class="summary-block">
-          <h4>Constructor (custom)</h4>
+        <div class="summary-block" id="summary-constructor">
+          <button type="button" class="btn-delete-summary" onclick="removeItem('constructor')" title="Remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </button>
+          <h4>Constructor (custom) </h4>
           <div class="summary-list">
             <div class="summary-item"><b>Name:</b> ${c.name}</div>
             <div class="summary-item"><b>Country:</b> ${countryName}</div>
@@ -368,7 +371,10 @@ function renderSummary(){
       `);
     } else {
       parts.push(`
-        <div class="summary-block">
+        <div class="summary-block" id="summary-constructor">
+          <button type="button" class="btn-delete-summary" onclick="removeItem('constructor')" title="Remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </button>
           <h4>Constructor (existing)</h4>
           <div class="summary-list">
             <div class="summary-item"><b>Name:</b> ${savedData.constructor.name}</div>
@@ -394,14 +400,16 @@ function renderSummary(){
     `);
   }
   if(savedData.race){
-    if(savedData.race.mode === 'custom'){
       const r = savedData.race.data;
       const circuitSelect = document.getElementById('race_circuit');
       const circuitName = circuitSelect && r.circuit_id
         ? circuitSelect.querySelector(`option[value="${r.circuit_id}"]`)?.textContent || r.circuit_id
         : '-';
       parts.push(`
-        <div class="summary-block">
+        <div class="summary-block" id="summary-race">
+          <button type="button" class="btn-delete-summary" onclick="removeItem('race')" title="Remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </button>
           <h4>Race (custom)</h4>
           <div class="summary-list">
             <div class="summary-item"><b>Name:</b> ${r.official_name}</div>
@@ -414,22 +422,6 @@ function renderSummary(){
           </div>
         </div>
       `);
-    } else {
-      parts.push(`
-        <div class="summary-block">
-          <h4>Race (existing)</h4>
-          <div class="summary-list">
-            <div class="summary-item"><b>Name:</b> ${savedData.race.official_name || '-'}</div>
-            <div class="summary-item"><b>Circuit:</b> ${savedData.race.circuit_name || '-'}</div>
-            <div class="summary-item"><b>Year:</b> ${savedData.race.year ?? '-'}</div>
-            <div class="summary-item"><b>Round:</b> ${savedData.race.round ?? '-'}</div>
-            <div class="summary-item"><b>Date:</b> ${savedData.race.date || '-'}</div>
-            <div class="summary-item"><b>Format:</b> ${savedData.race.qualifying_format || '-'}</div>
-            <div class="summary-item"><b>Laps:</b> ${savedData.race.laps ?? '-'}</div>
-          </div>
-        </div>
-      `);
-    }
   }
   if(savedData.raceData?.length){
     parts.push(`
@@ -441,6 +433,25 @@ function renderSummary(){
   }
 
   wrap.innerHTML = parts.length ? parts.join('') : `<div class="summary-empty">No data saved yet. Save a section to see it here.</div>`;
+}
+
+function removeItem(type) {
+    // 1. Veriyi temizle
+    if (type === 'raceData') {
+        savedData.raceData = [];
+    } else {
+        savedData[type] = null;
+    }
+
+    const block = document.getElementById(`summary-${type}`);
+    if (block) {
+        block.classList.add('summary-item-fade-out');
+        setTimeout(() => {
+            renderSummary();
+        }, 300);
+    } else {
+        renderSummary();
+    }
 }
 
 // Init

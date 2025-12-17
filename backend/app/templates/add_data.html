@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Data Panel | F1 Race Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/add_data.css') }}">
+</head>
+<body>
+  {% include "navbar.html" %}
+
+  <div class="panel-container">
+    <header class="panel-header">
+      <h1>User Data Panel</h1>
+      <p>Configure and manage your custom simulation data</p>
+    </header>
+
+    <div class="data-grid">
+      {% for key, info in user_modules.items() %}
+      <a href="{{ url_for(info.route) }}" class="action-card">
+        <div class="card-badge">Data Entry</div>
+        <div class="card-icon-wrapper">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            {{ info.svg_path|safe }}
+          </svg>
+        </div>
+        <h3>{{ info.name }}</h3>
+        <p>{{ info.description }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>

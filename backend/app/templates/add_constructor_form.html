@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% if record %}Edit{% else %}Add New{% endif %} Constructor - F1 Race Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/add_data.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+</head>
+<body style="background: radial-gradient(1300px 800px at 18% 8%, #1a2632 0%, #0b0f14 55%, #07090c 100%) no-repeat fixed;">
+  
+  {% include "navbar.html" %}
+
+  <div class="panel-container">
+    <div class="panel-header">
+      <h1>{% if record %}Edit{% else %}Create New{% endif %} {{ table_info.display_name }}</h1>
+      <p>{% if record %}Update your custom constructor details below{% else %}Fill in the form to create a new custom constructor{% endif %}</p>
+    </div>
+
+    <form id="addConstructorForm" class="data-entry-form" 
+          data-id="{{ record.id if record else '' }}" 
+          data-mode="{% if record %}edit{% else %}create{% endif %}">
+      
+      {% for col in schema %}
+        {% set col_name = col.name %}
+        <div class="form-group">
+          <label for="{{ col_name }}">
+            {{ col_name|replace('_', ' ')|title }}
+            {% if not col.nullable %}<span style="color: var(--f1-red);">*</span>{% endif %}
+          </label>
+          
+          {% if col.type == 'fk' %}
+            <select id="{{ col_name }}" name="{{ col_name }}" {% if not col.nullable %}required{% endif %}>
+              <option value="">-- Select {{ col_name|replace('_id', '')|title }} --</option>
+              {% for option in fk_options[col_name] %}
+                <option value="{{ option.id }}" {% if record and record[col_name] == option.id %}selected{% endif %}>
+                    {{ option.display }}
+                </option>
+              {% endfor %}
+            </select>
+          {% elif col.type == 'integer' %}
+            <input type="number" id="{{ col_name }}" name="{{ col_name }}" step="1" 
+                   value="{{ record[col_name] if record and record[col_name] is not none else '' }}"
+                   {% if not col.nullable %}required{% endif %} />
+          {% elif col.type == 'numeric' %}
+            <input type="number" id="{{ col_name }}" name="{{ col_name }}" step="any" 
+                   value="{{ record[col_name] if record and record[col_name] is not none else '' }}"
+                   {% if not col.nullable %}required{% endif %} />
+          {% else %}
+            <input type="text" id="{{ col_name }}" name="{{ col_name }}" 
+                   value="{{ record[col_name] if record and record[col_name] is not none else '' }}"
+                   {% if not col.nullable %}required{% endif %} />
+          {% endif %}
+          
+          <p class="info-text">
+            {% if col.nullable %}(Optional){% else %}(Required){% endif %}
+          </p>
+        </div>
+      {% endfor %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn-panel btn-panel-primary">
+            {% if record %}Update{% else %}Create{% endif %} {{ table_info.display_name }}
+        </button>
+        <a href="{{ url_for('user.user_constructors_list') }}" class="btn-panel btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('addConstructorForm');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Pull values from HTML data attributes
+        const constructorId = form.getAttribute('data-id');
+        const mode = form.getAttribute('data-mode');
+
+        // Collect Form Data
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // Process numeric fields
+        const numericFields = ['total_championship_wins', 'total_race_starts', 'total_podiums', 'total_points', 'total_pole_positions', 'best_championship_position'];
+        numericFields.forEach(field => {
+          if (data[field] !== undefined && data[field] !== "") {
+            data[field] = parseFloat(data[field]);
+          } else {
+            data[field] = null;
+          }
+        });
+
+        // Construct dynamic URL
+        const url = mode === 'edit' 
+          ? `/api/update-constructor/${constructorId}` 
+          : '/api/add-constructor';
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            alert(mode === 'edit' ? 'Constructor updated successfully!' : 'Constructor created successfully!');
+            window.location.href = "{{ url_for('user.user_constructors_list') }}";
+          } else {
+            alert('Error: ' + result.error);
+          }
+        } catch (err) {
+          console.error('Submission failed:', err);
+          alert('Failed to submit form. Please try again.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

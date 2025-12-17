@@ -77,7 +77,66 @@ def get_constructors_data():
     finally:
         db.close()
 
-# ...existing code...
+@constructors_bp.route("/api/add-constructor", methods=["POST"])
+def add_constructor():
+    if 'username' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        user_id = session.get('user_id')
+        
+        db = DatabaseConnection()
+        
+        # Get the next constructor ID
+        db.execute("SELECT MAX(CAST(SUBSTRING(id FROM '[0-9]+') AS INTEGER)) as max_id FROM constructor WHERE id ~ '^uc-[0-9]+$'")
+        result = db.fetchone()
+        next_num = (result['max_id'] or 0) + 1 if result else 1
+        constructor_id = f"uc-{next_num}"
+        
+        # Insert constructor
+        insert_query = """
+            INSERT INTO constructor (
+                id, user_id, country_id, name, full_name,
+                best_championship_position, total_championship_wins,
+                total_race_starts, total_podiums, total_points,
+                total_pole_positions, is_real
+            ) VALUES (
+                %(id)s, %(user_id)s, %(country_id)s, %(name)s, %(full_name)s,
+                %(best_championship_position)s, %(total_championship_wins)s,
+                %(total_race_starts)s, %(total_podiums)s, %(total_points)s,
+                %(total_pole_positions)s, FALSE
+            )
+        """
+        
+        params = {
+            'id': constructor_id,
+            'user_id': user_id,
+            'country_id': data['country_id'],
+            'name': data['name'],
+            'full_name': data['name'],  # Same as name
+            'best_championship_position': data.get('best_championship_position') or None,
+            'total_championship_wins': data['total_championship_wins'],
+            'total_race_starts': data['total_race_starts'],
+            'total_podiums': data['total_podiums'],
+            'total_points': data['total_points'],
+            'total_pole_positions': data['total_pole_positions']
+        }
+        
+        db.execute(insert_query, params)
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'constructor_id': constructor_id,
+            'message': 'Constructor added successfully'
+        })
+        
+    except Exception as e:
+        print(f"Error adding constructor: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
 
 @constructors_bp.route("/api/constructors/<constructor_id>")
 def get_constructor_by_id(constructor_id):
@@ -118,5 +177,163 @@ def get_constructor_by_id(constructor_id):
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+@constructors_bp.route("/constructors/new")
+def add_constructor_page():
+    authenticated = 'username' in session
+    
+    db = DatabaseConnection()
+    try:
+        # 1. Fetch Countries for the dropdown
+        db.execute("SELECT id, name FROM country ORDER BY name ASC")
+        countries = db.fetchall()
+        
+        # 2. Define the schema manually to match your admin_form structure
+        # This mimics the 'schema' object the admin panel uses
+        constructor_schema = [
+            {'name': 'country_id', 'type': 'fk', 'nullable': False},
+            {'name': 'name', 'type': 'text', 'nullable': False},
+            {'name': 'best_championship_position', 'type': 'integer', 'nullable': True},
+            {'name': 'total_championship_wins', 'type': 'integer', 'nullable': False},
+            {'name': 'total_race_starts', 'type': 'integer', 'nullable': False},
+            {'name': 'total_podiums', 'type': 'integer', 'nullable': False},
+            {'name': 'total_points', 'type': 'numeric', 'nullable': False},
+            {'name': 'total_pole_positions', 'type': 'integer', 'nullable': False},
+        ]
+
+        # 3. Format foreign key options for the template
+        fk_options = {
+            'country_id': [{'id': c['id'], 'display': c['name']} for c in countries]
+        }
+
+        # table_info mock for the template headers
+        table_info = {
+            'display_name': 'Constructor',
+            'name': 'constructor'
+        }
+
+        return render_template(
+            "add_constructor_form.html",
+            schema=constructor_schema,
+            fk_options=fk_options,
+            table_info=table_info,
+            foreign_keys={'country_id': {'table': 'country'}},
+            record=None, # None because we are creating
+            table_name='constructor',
+            authenticated=authenticated
+        )
+    finally:
+        db.close()
+
+# app/routes/constructors.py
+
+@constructors_bp.route("/constructors/edit/<constructor_id>")
+def edit_constructor_page(constructor_id):
+    authenticated = 'username' in session
+    
+    db = DatabaseConnection()
+    try:
+        # 1. Fetch the existing record
+        db.execute("SELECT * FROM constructor WHERE id = %s", (constructor_id,))
+        record = db.fetchone()
+        
+        if not record:
+            return "Constructor not found", 404
+
+        # 2. Fetch Countries for the dropdown
+        db.execute("SELECT id, name FROM country ORDER BY name ASC")
+        countries = db.fetchall()
+        
+        # 3. Define the same schema used in the create route
+        constructor_schema = [
+            {'name': 'country_id', 'type': 'fk', 'nullable': False},
+            {'name': 'name', 'type': 'text', 'nullable': False},
+            {'name': 'best_championship_position', 'type': 'integer', 'nullable': True},
+            {'name': 'total_championship_wins', 'type': 'integer', 'nullable': False},
+            {'name': 'total_race_starts', 'type': 'integer', 'nullable': False},
+            {'name': 'total_podiums', 'type': 'integer', 'nullable': False},
+            {'name': 'total_points', 'type': 'numeric', 'nullable': False},
+            {'name': 'total_pole_positions', 'type': 'integer', 'nullable': False},
+        ]
+
+        fk_options = {
+            'country_id': [{'id': c['id'], 'display': c['name']} for c in countries]
+        }
+
+        table_info = {
+            'display_name': 'Constructor',
+            'name': 'constructor'
+        }
+
+        # Reuse the same template!
+        return render_template(
+            "add_constructor_form.html",
+            schema=constructor_schema,
+            fk_options=fk_options,
+            table_info=table_info,
+            record=record,  # Now passing the existing data
+            constructor_id=constructor_id,
+            authenticated=authenticated
+        )
+    finally:
+        db.close()
+
+
+@constructors_bp.route("/api/update-constructor/<constructor_id>", methods=["POST"])
+def update_constructor(constructor_id):
+    
+    try:
+        data = request.get_json()
+        db = DatabaseConnection()
+        
+        update_query = """
+            UPDATE constructor SET 
+                country_id = %(country_id)s,
+                name = %(name)s,
+                full_name = %(name)s,
+                best_championship_position = %(best_championship_position)s,
+                total_championship_wins = %(total_championship_wins)s,
+                total_race_starts = %(total_race_starts)s,
+                total_podiums = %(total_podiums)s,
+                total_points = %(total_points)s,
+                total_pole_positions = %(total_pole_positions)s
+            WHERE id = %(id)s AND user_id = %(user_id)s
+        """
+        
+        data['id'] = constructor_id
+        data['user_id'] = session.get('user_id')
+        
+        db.execute(update_query, data)
+        db.commit()
+        
+        return jsonify({'success': True, 'message': 'Constructor updated successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+# app/routes/constructors.py
+@constructors_bp.route("/api/delete-constructor/<constructor_id>", methods=["POST"])
+def delete_constructor(constructor_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    db = DatabaseConnection()
+    try:
+        user_id = session.get('user_id')
+        
+        # WHERE clause içinde hem ID hem de user_id zorunlu
+        query = "DELETE FROM constructor WHERE id = %s AND user_id = %s AND id LIKE 'uc-%%'"
+        db.execute(query, (constructor_id, user_id))
+        
+        if db.cursor.rowcount == 0:
+            return jsonify({'success': False, 'error': 'Permission denied or record not found'}), 403
+            
+        db.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
     finally:
         db.close()
