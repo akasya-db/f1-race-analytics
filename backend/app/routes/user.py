@@ -12,6 +12,12 @@ def data_panel():
             'route': 'user.user_constructors_list', 
             'description': 'Manage your custom racing teams and performance stats.',
             'svg_path': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>'
+        },
+        'races': {
+            'name': 'Races',
+            'route': 'user.user_races_list', 
+            'description': 'Manage your custom race events and configurations.',
+            'svg_path': '<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>'
         }
     }
     return render_template('add_data.html', user_modules=user_modules)
@@ -47,3 +53,35 @@ def user_constructors_list():
                            records=records, 
                            schema=schema, 
                            title="My Constructors")
+
+
+@user_bp.route('/my-races')
+def user_races_list():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        
+    db = DatabaseConnection()
+    records = []
+    schema = []
+    
+    try:
+        user_id = session.get('user_id')
+        query = """SELECT r.*, c.full_name as circuit_name 
+                   FROM race r 
+                   LEFT JOIN circuit c ON r.circuit_id = c.id 
+                   WHERE r.is_real = FALSE AND r.user_id = %s 
+                   ORDER BY r.year DESC, r.round DESC"""
+        db.execute(query, (user_id,))
+        records = db.fetchall()
+        
+        if db.cursor.description:
+            schema = [desc[0] for desc in db.cursor.description]
+    except Exception as e:
+        print(f"DEBUG ERROR: {e}") 
+    finally:
+        db.close()
+
+    return render_template('user_table_list.html', 
+                           records=records, 
+                           schema=schema, 
+                           title="My Races")

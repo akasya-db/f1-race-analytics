@@ -185,6 +185,121 @@ def add_race_page():
         db.close()
 
 
+@races_bp.route("/races/new")
+def add_race_form_page():
+    """Display the add race form page"""
+    authenticated = 'username' in session
+    
+    db = DatabaseConnection()
+    try:
+        # Fetch circuits for the dropdown
+        db.execute("SELECT id, full_name, place_name FROM circuit ORDER BY full_name ASC")
+        circuits = db.fetchall()
+        
+        # Define the schema for the race form
+        race_schema = [
+            {'name': 'circuit_id', 'type': 'fk', 'nullable': False},
+            {'name': 'year', 'type': 'integer', 'nullable': False},
+            {'name': 'round', 'type': 'integer', 'nullable': False},
+            {'name': 'date', 'type': 'date', 'nullable': False},
+            {'name': 'official_name', 'type': 'text', 'nullable': False},
+            {'name': 'qualifying_format', 'type': 'text', 'nullable': False},
+            {'name': 'laps', 'type': 'integer', 'nullable': False},
+            {'name': 'qualifying_date', 'type': 'date', 'nullable': True},
+        ]
+
+        # Format foreign key options for the template
+        fk_options = {
+            'circuit_id': [{'id': c['id'], 'display': f"{c['full_name']} ({c['place_name']})"} for c in circuits],
+            'qualifying_format': [
+                {'id': 'TWO_SESSION', 'display': 'Two-session'},
+                {'id': 'ONE_SESSION', 'display': 'One-session'},
+                {'id': 'FOUR_LAPS', 'display': 'Four laps'},
+                {'id': 'SPRINT_RACE', 'display': 'Sprint Race'},
+                {'id': 'KNOCKOUT', 'display': 'Knockout'},
+                {'id': 'AGGREGATE', 'display': 'Aggregate'},
+            ]
+        }
+
+        table_info = {
+            'display_name': 'Race',
+            'name': 'race'
+        }
+
+        return render_template(
+            "add_race_form.html",
+            schema=race_schema,
+            fk_options=fk_options,
+            table_info=table_info,
+            foreign_keys={'circuit_id': {'table': 'circuit'}},
+            record=None,
+            table_name='race',
+            authenticated=authenticated
+        )
+    finally:
+        db.close()
+
+
+@races_bp.route("/races/edit/<int:race_id>")
+def edit_race_form_page(race_id):
+    """Display the edit race form page"""
+    authenticated = 'username' in session
+    
+    db = DatabaseConnection()
+    try:
+        # Fetch the existing record
+        db.execute("SELECT * FROM race WHERE id = %s", (race_id,))
+        record = db.fetchone()
+        
+        if not record:
+            return "Race not found", 404
+
+        # Fetch circuits for the dropdown
+        db.execute("SELECT id, full_name, place_name FROM circuit ORDER BY full_name ASC")
+        circuits = db.fetchall()
+        
+        # Define the same schema used in the create route
+        race_schema = [
+            {'name': 'circuit_id', 'type': 'fk', 'nullable': False},
+            {'name': 'year', 'type': 'integer', 'nullable': False},
+            {'name': 'round', 'type': 'integer', 'nullable': False},
+            {'name': 'date', 'type': 'date', 'nullable': False},
+            {'name': 'official_name', 'type': 'text', 'nullable': False},
+            {'name': 'qualifying_format', 'type': 'text', 'nullable': False},
+            {'name': 'laps', 'type': 'integer', 'nullable': False},
+            {'name': 'qualifying_date', 'type': 'date', 'nullable': True},
+        ]
+
+        fk_options = {
+            'circuit_id': [{'id': c['id'], 'display': f"{c['full_name']} ({c['place_name']})"} for c in circuits],
+            'qualifying_format': [
+                {'id': 'TWO_SESSION', 'display': 'Two-session'},
+                {'id': 'ONE_SESSION', 'display': 'One-session'},
+                {'id': 'FOUR_LAPS', 'display': 'Four laps'},
+                {'id': 'SPRINT_RACE', 'display': 'Sprint Race'},
+                {'id': 'KNOCKOUT', 'display': 'Knockout'},
+                {'id': 'AGGREGATE', 'display': 'Aggregate'},
+            ]
+        }
+
+        table_info = {
+            'display_name': 'Race',
+            'name': 'race'
+        }
+
+        return render_template(
+            "add_race_form.html",
+            schema=race_schema,
+            fk_options=fk_options,
+            table_info=table_info,
+            record=record,
+            race_id=race_id,
+            authenticated=authenticated
+        )
+    finally:
+        db.close()
+
+
 @races_bp.route("/api/add-race", methods=["POST"])
 def add_race():
     if 'username' not in session:
@@ -237,6 +352,73 @@ def add_race():
     except Exception as e:
         print(f"Error adding race: {e}")
         return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@races_bp.route("/api/update-race/<int:race_id>", methods=["POST"])
+def update_race(race_id):
+    """Update an existing race"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        db = DatabaseConnection()
+        
+        update_query = """
+            UPDATE race SET 
+                circuit_id = %(circuit_id)s,
+                year = %(year)s,
+                round = %(round)s,
+                date = %(date)s,
+                official_name = %(official_name)s,
+                qualifying_format = %(qualifying_format)s,
+                laps = %(laps)s,
+                qualifying_date = %(qualifying_date)s
+            WHERE id = %(id)s AND user_id = %(user_id)s AND is_real = FALSE
+        """
+        
+        data['id'] = race_id
+        data['user_id'] = session.get('user_id')
+        
+        db.execute(update_query, data)
+        
+        if db.cursor.rowcount == 0:
+            return jsonify({'success': False, 'error': 'Permission denied or record not found'}), 403
+        
+        db.commit()
+        
+        return jsonify({'success': True, 'message': 'Race updated successfully'})
+    except Exception as e:
+        print(f"Error updating race: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@races_bp.route("/api/delete-race/<int:race_id>", methods=["POST"])
+def delete_race(race_id):
+    """Delete a user-created race"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    db = DatabaseConnection()
+    try:
+        user_id = session.get('user_id')
+        
+        # Only allow deletion of user-created races (is_real = FALSE)
+        query = "DELETE FROM race WHERE id = %s AND user_id = %s AND is_real = FALSE"
+        db.execute(query, (race_id, user_id))
+        
+        if db.cursor.rowcount == 0:
+            return jsonify({'success': False, 'error': 'Permission denied or record not found'}), 403
+            
+        db.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error deleting race: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
     finally:
         db.close()
 

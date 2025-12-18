@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% if record %}Edit{% else %}Add New{% endif %} Constructor - F1 Race Analytics</title>
+  <title>{% if record %}Edit{% else %}Add New{% endif %} Race - F1 Race Analytics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
@@ -17,10 +17,10 @@
   <div class="panel-container">
     <div class="panel-header">
       <h1>{% if record %}Edit{% else %}Create New{% endif %} {{ table_info.display_name }}</h1>
-      <p>{% if record %}Update your custom constructor details below{% else %}Fill in the form to create a new custom constructor{% endif %}</p>
+      <p>{% if record %}Update your custom race details below{% else %}Fill in the form to create a new custom race{% endif %}</p>
     </div>
 
-    <form id="addConstructorForm" class="data-entry-form" 
+    <form id="addRaceForm" class="data-entry-form" 
           data-id="{{ record.id if record else '' }}" 
           data-mode="{% if record %}edit{% else %}create{% endif %}">
       
@@ -45,10 +45,24 @@
             <input type="number" id="{{ col_name }}" name="{{ col_name }}" step="1" 
                    value="{{ record[col_name] if record and record[col_name] is not none else '' }}"
                    {% if not col.nullable %}required{% endif %} />
-          {% elif col.type == 'numeric' %}
-            <input type="number" id="{{ col_name }}" name="{{ col_name }}" step="any" 
+          {% elif col.type == 'date' %}
+            <input type="date" id="{{ col_name }}" name="{{ col_name }}" 
                    value="{{ record[col_name] if record and record[col_name] is not none else '' }}"
                    {% if not col.nullable %}required{% endif %} />
+          {% elif col_name == 'qualifying_format' %}
+            <select id="{{ col_name }}" name="{{ col_name }}" {% if not col.nullable %}required{% endif %}>
+              <option value="">-- Select Qualifying Format --</option>
+              {% set q_opts = fk_options["qualifying_format"] if fk_options and 'qualifying_format' in fk_options else [] %}
+              {% if q_opts %}
+                {% for opt in q_opts %}
+                  <option value="{{ opt.id }}" {% if record and record[col_name] == opt.id %}selected{% endif %}>{{ opt.display }}</option>
+                {% endfor %}
+              {% else %}
+                <option value="traditional" {% if record and record[col_name] == 'traditional' %}selected{% endif %}>Traditional</option>
+                <option value="sprint" {% if record and record[col_name] == 'sprint' %}selected{% endif %}>Sprint</option>
+                <option value="knockout" {% if record and record[col_name] == 'knockout' %}selected{% endif %}>Knockout</option>
+              {% endif %}
+            </select>
           {% else %}
             <input type="text" id="{{ col_name }}" name="{{ col_name }}" 
                    value="{{ record[col_name] if record and record[col_name] is not none else '' }}"
@@ -65,20 +79,20 @@
         <button type="submit" class="btn-panel btn-panel-primary">
             {% if record %}Update{% else %}Create{% endif %} {{ table_info.display_name }}
         </button>
-        <a href="{{ url_for('user.user_constructors_list') }}" class="btn-panel btn-secondary">Cancel</a>
+        <a href="{{ url_for('user.user_races_list') }}" class="btn-panel btn-secondary">Cancel</a>
       </div>
     </form>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('addConstructorForm');
+      const form = document.getElementById('addRaceForm');
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         // Pull values from HTML data attributes
-        const constructorId = form.getAttribute('data-id');
+        const raceId = form.getAttribute('data-id');
         const mode = form.getAttribute('data-mode');
 
         // Collect Form Data
@@ -86,19 +100,24 @@
         const data = Object.fromEntries(formData.entries());
 
         // Process numeric fields
-        const numericFields = ['total_championship_wins', 'total_race_starts', 'total_podiums', 'total_points', 'total_pole_positions', 'best_championship_position'];
+        const numericFields = ['year', 'round', 'laps'];
         numericFields.forEach(field => {
           if (data[field] !== undefined && data[field] !== "") {
-            data[field] = parseFloat(data[field]);
+            data[field] = parseInt(data[field], 10);
           } else {
             data[field] = null;
           }
         });
 
+        // Handle optional date field
+        if (data['qualifying_date'] === "") {
+          data['qualifying_date'] = null;
+        }
+
         // Construct dynamic URL
         const url = mode === 'edit' 
-          ? `/api/update-constructor/${constructorId}` 
-          : '/api/add-constructor';
+          ? `/api/update-race/${raceId}` 
+          : '/api/add-race';
 
         try {
           const response = await fetch(url, {
@@ -110,8 +129,8 @@
           const result = await response.json();
 
           if (result.success) {
-            alert(mode === 'edit' ? 'Constructor updated successfully!' : 'Constructor created successfully!');
-            window.location.href = "{{ url_for('user.user_constructors_list') }}";
+            alert(mode === 'edit' ? 'Race updated successfully!' : 'Race created successfully!');
+            window.location.href = "{{ url_for('user.user_races_list') }}";
           } else {
             alert('Error: ' + result.error);
           }

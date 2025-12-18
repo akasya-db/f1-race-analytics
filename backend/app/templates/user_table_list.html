@@ -25,6 +25,10 @@
           <a href="{{ url_for('constructors.add_constructor_page') }}" class="btn-panel btn-panel-primary">
             + Add New Constructor
           </a>
+        {% elif title == "My Races" %}
+          <a href="{{ url_for('races.add_race_form_page') }}" class="btn-panel btn-panel-primary">
+            + Add New Race
+          </a>
         {% endif %}
       </div>
     </div>
@@ -35,10 +39,12 @@
         <thead>
           <tr>
             {% for col in schema %}
-                {% if col not in ['id', 'is_real', 'user_id', 'name'] %}
+                {% if col not in ['id', 'is_real', 'user_id', 'name', 'circuit_id'] %}
                     <th>
                     {% if col == 'country_id' %} Country
                     {% elif col == 'full_name' %} Name
+                    {% elif col == 'circuit_name' %} Circuit
+                    {% elif col == 'official_name' %} Race Name
                     {% else %} {{ col|replace('_', ' ')|title }}
                     {% endif %}
                     </th>
@@ -51,7 +57,7 @@
           {% for record in records %}
           <tr>
             {% for col in schema %}
-              {% if col not in ['id', 'is_real', 'user_id', 'name'] %}
+              {% if col not in ['id', 'is_real', 'user_id', 'name', 'circuit_id'] %}
               <td>
                 {% if record[col] is none %}
                   <span style="opacity: 0.5;">-</span>
@@ -62,17 +68,27 @@
               {% endif %}
             {% endfor %}
             <td class="actions-cell">
+                {% if title == "My Constructors" %}
                 <a href="{{ url_for('constructors.edit_constructor_page', constructor_id=record['id']) }}" class="btn-icon btn-edit" title="Edit">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                 </a>
+                {% elif title == "My Races" %}
+                <a href="{{ url_for('races.edit_race_form_page', race_id=record['id']) }}" class="btn-icon btn-edit" title="Edit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </a>
+                {% endif %}
 
                 <button class="btn-icon btn-delete delete-trigger" 
                 title="Delete" 
                 data-id="{{ record.id }}" 
-                data-name="{{ record.name }}">
+                data-name="{{ record.official_name if title == 'My Races' else record.name }}"
+                data-type="{{ 'race' if title == 'My Races' else 'constructor' }}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -88,7 +104,11 @@
     </div>
     {% else %}
     <div class="empty-state">
+      {% if title == "My Constructors" %}
       <p style="color: var(--f1-grey); font-size: 18px; margin-bottom: 24px;">You haven't added any custom constructors yet.</p>
+      {% elif title == "My Races" %}
+      <p style="color: var(--f1-grey); font-size: 18px; margin-bottom: 24px;">You haven't added any custom races yet.</p>
+      {% endif %}
     </div>
     {% endif %}
   </div>
@@ -103,15 +123,21 @@ document.addEventListener('DOMContentLoaded', () => {
             // Get data from the 'data-' attributes we set on the button
             const id = this.getAttribute('data-id');
             const name = this.getAttribute('data-name');
+            const type = this.getAttribute('data-type');
 
             // Confirmation dialog
             if (!confirm(`Are you sure you want to delete "${name}"?`)) {
                 return;
             }
 
+            // Determine the correct API endpoint based on type
+            const apiUrl = type === 'race' 
+                ? `/api/delete-race/${id}` 
+                : `/api/delete-constructor/${id}`;
+
             try {
                 // Send the request to your delete API
-                const response = await fetch(`/api/delete-constructor/${id}`, {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -132,9 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-</body>
-</html>
-</body>
-</html>
+<script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
 </body>
 </html>

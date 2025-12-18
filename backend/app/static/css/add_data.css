@@ -6,6 +6,7 @@
   --f1-white: #f6f8fb;
   --f1-grey: #a9bdd1;
   --f1-green: #00e08d; /* Added from admin for edit hover */
+  --f1-yellow: #ffd038; /* Match homepage yellow for user dropdown */
 }
 
 /* 1. Global Reset & Background */
