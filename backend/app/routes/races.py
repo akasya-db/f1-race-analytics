@@ -164,6 +164,176 @@ def get_race_data():
     finally:
         db.close()
 
+
+@races_bp.route('/race-data/new')
+def add_race_data_form_page():
+    """Render form to create a new race_data row"""
+    if 'username' not in session:
+        return render_template('login.html')
+
+    db = DatabaseConnection()
+    try:
+        user_id = session.get('user_id')
+        # fetch only user-created races (is_real = FALSE) for dropdown
+        db.execute("""SELECT id, official_name, year FROM race 
+                      WHERE is_real = FALSE AND user_id = %s 
+                      ORDER BY year DESC, official_name ASC""", (user_id,))
+        races = db.fetchall()
+
+        db.execute("SELECT id, full_name FROM driver ORDER BY full_name ASC")
+        drivers = db.fetchall()
+
+        db.execute("SELECT id, full_name FROM constructor ORDER BY full_name ASC")
+        constructors = db.fetchall()
+
+        return render_template('add_race_data_form.html', races=races, drivers=drivers, constructors=constructors, record=None)
+    finally:
+        db.close()
+
+
+@races_bp.route('/race-data/edit/<int:race_data_id>')
+def edit_race_data_form_page(race_data_id):
+    """Render edit form for an existing race_data row (must be user-owned)"""
+    if 'user_id' not in session:
+        return render_template('login.html')
+
+    db = DatabaseConnection()
+    try:
+        db.execute("SELECT * FROM race_data WHERE id = %s", (race_data_id,))
+        record = db.fetchone()
+        if not record:
+            return "Race data not found", 404
+
+        # permission check: must belong to user
+        if record.get('user_id') != session.get('user_id'):
+            return "Permission denied", 403
+
+        user_id = session.get('user_id')
+        # fetch only user-created races (is_real = FALSE) for dropdown
+        db.execute("""SELECT id, official_name, year FROM race 
+                      WHERE is_real = FALSE AND user_id = %s 
+                      ORDER BY year DESC, official_name ASC""", (user_id,))
+        races = db.fetchall()
+        db.execute("SELECT id, full_name FROM driver ORDER BY full_name ASC")
+        drivers = db.fetchall()
+        db.execute("SELECT id, full_name FROM constructor ORDER BY full_name ASC")
+        constructors = db.fetchall()
+
+        return render_template('add_race_data_form.html', races=races, drivers=drivers, constructors=constructors, record=record)
+    finally:
+        db.close()
+
+
+@races_bp.route('/api/add-race-data', methods=['POST'])
+def add_race_data():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+
+    try:
+        data = request.get_json()
+        user_id = session.get('user_id')
+
+        db = DatabaseConnection()
+
+        insert_query = """
+            INSERT INTO race_data (
+                race_id, driver_id, constructor_id, user_id,
+                position_display_order, driver_number, race_points,
+                race_pole_position, race_qualification_position_number, race_grid_position_number, is_real
+            ) VALUES (
+                %(race_id)s, %(driver_id)s, %(constructor_id)s, %(user_id)s,
+                %(position_display_order)s, %(driver_number)s, %(race_points)s,
+                %(race_pole_position)s, %(race_qualification_position_number)s, %(race_grid_position_number)s, FALSE
+            ) RETURNING id
+        """
+
+        params = {
+            'race_id': data.get('race_id'),
+            'driver_id': data.get('driver_id'),
+            'constructor_id': data.get('constructor_id'),
+            'user_id': user_id,
+            'position_display_order': data.get('position_display_order'),
+            'driver_number': data.get('driver_number'),
+            'race_points': data.get('race_points'),
+            'race_pole_position': data.get('race_pole_position'),
+            'race_qualification_position_number': data.get('race_qualification_position_number'),
+            'race_grid_position_number': data.get('race_grid_position_number')
+        }
+
+        db.execute(insert_query, params)
+        new_id = db.fetchone()[0]
+        db.commit()
+
+        return jsonify({'success': True, 'race_data_id': new_id})
+    except Exception as e:
+        print(f"Error adding race_data: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@races_bp.route('/api/update-race-data/<int:race_data_id>', methods=['POST'])
+def update_race_data(race_data_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+
+    try:
+        data = request.get_json()
+        user_id = session.get('user_id')
+        db = DatabaseConnection()
+
+        update_query = """
+            UPDATE race_data SET
+                race_id = %(race_id)s,
+                driver_id = %(driver_id)s,
+                constructor_id = %(constructor_id)s,
+                position_display_order = %(position_display_order)s,
+                driver_number = %(driver_number)s,
+                race_points = %(race_points)s,
+                race_pole_position = %(race_pole_position)s,
+                race_qualification_position_number = %(race_qualification_position_number)s,
+                race_grid_position_number = %(race_grid_position_number)s
+            WHERE id = %(id)s AND user_id = %(user_id)s
+        """
+
+        params = dict(data)
+        params['id'] = race_data_id
+        params['user_id'] = user_id
+
+        db.execute(update_query, params)
+        if db.cursor.rowcount == 0:
+            return jsonify({'success': False, 'error': 'Permission denied or record not found'}), 403
+
+        db.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error updating race_data: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@races_bp.route('/api/delete-race-data/<int:race_data_id>', methods=['POST'])
+def delete_race_data(race_data_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+
+    db = DatabaseConnection()
+    try:
+        user_id = session.get('user_id')
+        query = "DELETE FROM race_data WHERE id = %s AND user_id = %s"
+        db.execute(query, (race_data_id, user_id))
+        if db.cursor.rowcount == 0:
+            return jsonify({'success': False, 'error': 'Permission denied or record not found'}), 403
+
+        db.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error deleting race_data: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        db.close()
+
 @races_bp.route("/add-race")
 def add_race_page():
     authenticated = 'username' in session

@@ -29,6 +29,10 @@
           <a href="{{ url_for('races.add_race_form_page') }}" class="btn-panel btn-panel-primary">
             + Add New Race
           </a>
+        {% elif title == "My Race Data" %}
+          <a href="{{ url_for('races.add_race_data_form_page') }}" class="btn-panel btn-panel-primary">
+            + Add New Race Data
+          </a>
         {% endif %}
       </div>
     </div>
@@ -38,65 +42,103 @@
       <table class="panel-table">
         <thead>
           <tr>
-            {% for col in schema %}
+            {% if title == "My Race Data" %}
+              <th>Race</th>
+              <th>Driver</th>
+              <th>Constructor</th>
+              <th>Position</th>
+              <th>Number</th>
+              <th>Points</th>
+              <th>Pole</th>
+              <th>Qual Pos</th>
+              <th>Grid Pos</th>
+              <th>Created</th>
+              <th>Actions</th>
+            {% else %}
+              {% for col in schema %}
                 {% if col not in ['id', 'is_real', 'user_id', 'name', 'circuit_id'] %}
-                    <th>
-                    {% if col == 'country_id' %} Country
-                    {% elif col == 'full_name' %} Name
-                    {% elif col == 'circuit_name' %} Circuit
-                    {% elif col == 'official_name' %} Race Name
-                    {% else %} {{ col|replace('_', ' ')|title }}
+                  <th>
+                    {% if col == 'country_id' %}Country
+                    {% elif col == 'full_name' %}Name
+                    {% elif col == 'circuit_name' %}Circuit
+                    {% elif col == 'official_name' %}Race Name
+                    {% else %}{{ col|replace('_', ' ')|title }}
                     {% endif %}
-                    </th>
+                  </th>
                 {% endif %}
-            {% endfor %}
-            <th>Actions</th>
+              {% endfor %}
+              <th>Actions</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
           {% for record in records %}
           <tr>
-            {% for col in schema %}
-              {% if col not in ['id', 'is_real', 'user_id', 'name', 'circuit_id'] %}
-              <td>
-                {% if record[col] is none %}
-                  <span style="opacity: 0.5;">-</span>
-                {% else %}
-                  {{ record[col]|string|truncate(40) }}
-                {% endif %}
-              </td>
-              {% endif %}
-            {% endfor %}
-            <td class="actions-cell">
-                {% if title == "My Constructors" %}
-                <a href="{{ url_for('constructors.edit_constructor_page', constructor_id=record['id']) }}" class="btn-icon btn-edit" title="Edit">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+            {% if title == "My Race Data" %}
+              <td>{{ record.race_name or '-' }}</td>
+              <td>{{ record.driver_name or '-' }}</td>
+              <td>{{ record.constructor_name or '-' }}</td>
+              <td>{{ record.position_display_order or '-' }}</td>
+              <td>{{ record.driver_number or '-' }}</td>
+              <td>{{ record.race_points or '-' }}</td>
+              <td>{{ 'Yes' if record.race_pole_position else 'No' }}</td>
+              <td>{{ record.race_qualification_position_number or '-' }}</td>
+              <td>{{ record.race_grid_position_number or '-' }}</td>
+              <td>{{ record.created_at }}</td>
+              <td class="actions-cell">
+                <a href="{{ url_for('races.edit_race_data_form_page', race_data_id=record['id']) }}" class="btn-icon btn-edit" title="Edit">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
                 </a>
-                {% elif title == "My Races" %}
-                <a href="{{ url_for('races.edit_race_form_page', race_id=record['id']) }}" class="btn-icon btn-edit" title="Edit">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </a>
-                {% endif %}
-
-                <button class="btn-icon btn-delete delete-trigger" 
-                title="Delete" 
-                data-id="{{ record.id }}" 
-                data-name="{{ record.official_name if title == 'My Races' else record.name }}"
-                data-type="{{ 'race' if title == 'My Races' else 'constructor' }}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="btn-icon btn-delete delete-trigger" title="Delete" data-id="{{ record.id }}" data-name="{{ record.driver_name }} - {{ record.race_name }}" data-type="race_data">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     <line x1="10" y1="11" x2="10" y2="17"></line>
                     <line x1="14" y1="11" x2="14" y2="17"></line>
-                    </svg>
+                  </svg>
                 </button>
-            </td>
+              </td>
+            {% else %}
+              {% for col in schema %}
+                {% if col not in ['id', 'is_real', 'user_id', 'name', 'circuit_id'] %}
+                  <td>
+                    {% if record[col] is none %}
+                      <span style="opacity: 0.5;">-</span>
+                    {% else %}
+                      {{ record[col]|string|truncate(40) }}
+                    {% endif %}
+                  </td>
+                {% endif %}
+              {% endfor %}
+              <td class="actions-cell">
+                {% if title == "My Constructors" %}
+                  <a href="{{ url_for('constructors.edit_constructor_page', constructor_id=record['id']) }}" class="btn-icon btn-edit" title="Edit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </a>
+                {% elif title == "My Races" %}
+                  <a href="{{ url_for('races.edit_race_form_page', race_id=record['id']) }}" class="btn-icon btn-edit" title="Edit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </a>
+                {% endif %}
+                <button class="btn-icon btn-delete delete-trigger" title="Delete" data-id="{{ record.id }}" data-name="{{ record.official_name if title == 'My Races' else record.name }}" data-type="{{ 'race' if title == 'My Races' else 'constructor' }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+              </td>
+            {% endif %}
           </tr>
           {% endfor %}
         </tbody>
@@ -105,59 +147,57 @@
     {% else %}
     <div class="empty-state">
       {% if title == "My Constructors" %}
-      <p style="color: var(--f1-grey); font-size: 18px; margin-bottom: 24px;">You haven't added any custom constructors yet.</p>
+        <p style="color: var(--f1-grey); font-size: 18px; margin-bottom: 24px;">You haven't added any custom constructors yet.</p>
       {% elif title == "My Races" %}
-      <p style="color: var(--f1-grey); font-size: 18px; margin-bottom: 24px;">You haven't added any custom races yet.</p>
+        <p style="color: var(--f1-grey); font-size: 18px; margin-bottom: 24px;">You haven't added any custom races yet.</p>
+      {% elif title == "My Race Data" %}
+        <p style="color: var(--f1-grey); font-size: 18px; margin-bottom: 24px;">You haven't added any custom race data yet.</p>
       {% endif %}
     </div>
     {% endif %}
   </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // We look for all buttons with the 'delete-trigger' class
-    const deleteButtons = document.querySelectorAll('.delete-trigger');
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const deleteButtons = document.querySelectorAll('.delete-trigger');
 
-    deleteButtons.forEach(btn => {
+      deleteButtons.forEach(btn => {
         btn.addEventListener('click', async function() {
-            // Get data from the 'data-' attributes we set on the button
-            const id = this.getAttribute('data-id');
-            const name = this.getAttribute('data-name');
-            const type = this.getAttribute('data-type');
+          const id = this.getAttribute('data-id');
+          const name = this.getAttribute('data-name');
+          const type = this.getAttribute('data-type');
 
-            // Confirmation dialog
-            if (!confirm(`Are you sure you want to delete "${name}"?`)) {
-                return;
+          if (!confirm('Are you sure you want to delete "' + name + '"?')) {
+            return;
+          }
+
+          let apiUrl;
+          if (type === 'race') apiUrl = '/api/delete-race/' + id;
+          else if (type === 'constructor') apiUrl = '/api/delete-constructor/' + id;
+          else if (type === 'race_data') apiUrl = '/api/delete-race-data/' + id;
+          else apiUrl = '/api/delete';
+
+          try {
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              location.reload();
+            } else {
+              alert('Error: ' + result.error);
             }
-
-            // Determine the correct API endpoint based on type
-            const apiUrl = type === 'race' 
-                ? `/api/delete-race/${id}` 
-                : `/api/delete-constructor/${id}`;
-
-            try {
-                // Send the request to your delete API
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Refresh the table to show the item is gone
-                    location.reload();
-                } else {
-                    alert('Error: ' + result.error);
-                }
-            } catch (err) {
-                console.error('Delete failed:', err);
-                alert('Failed to connect to the server.');
-            }
+          } catch (err) {
+            console.error('Delete failed:', err);
+            alert('Failed to connect to the server.');
+          }
         });
+      });
     });
-});
-</script>
-<script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+  </script>
+  <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
 </body>
 </html>

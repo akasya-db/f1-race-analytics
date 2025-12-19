@@ -18,6 +18,12 @@ def data_panel():
             'route': 'user.user_races_list', 
             'description': 'Manage your custom race events and configurations.',
             'svg_path': '<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>'
+        },
+        'race_data': {
+            'name': 'Race Data',
+            'route': 'user.user_race_data_list',
+            'description': "Manage individual race data rows you've added.",
+            'svg_path': '<path d="M3 3h18v4H3V3zm0 7h18v11H3V10z"></path>'
         }
     }
     return render_template('add_data.html', user_modules=user_modules)
@@ -85,3 +91,48 @@ def user_races_list():
                            records=records, 
                            schema=schema, 
                            title="My Races")
+
+
+@user_bp.route('/my-race-data')
+def user_race_data_list():
+    """List race_data rows added by the user"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        
+    db = DatabaseConnection()
+    records = []
+    schema = []
+    try:
+        user_id = session.get('user_id')
+        query = """SELECT
+                       r.official_name AS race_name,
+                       d.full_name AS driver_name,
+                       c.full_name AS constructor_name,
+                       rd.position_display_order,
+                       rd.driver_number,
+                       rd.race_points,
+                       rd.race_pole_position,
+                       rd.race_qualification_position_number,
+                       rd.race_grid_position_number,
+                       rd.is_real,
+                       rd.created_at,
+                       rd.id
+                   FROM race_data rd
+                   LEFT JOIN race r ON rd.race_id = r.id
+                   LEFT JOIN driver d ON rd.driver_id = d.id
+                   LEFT JOIN constructor c ON rd.constructor_id = c.id
+                   WHERE rd.user_id = %s
+                   ORDER BY rd.created_at DESC NULLS LAST"""
+        db.execute(query, (user_id,))
+        records = db.fetchall()
+        if db.cursor.description:
+            schema = [desc[0] for desc in db.cursor.description]
+    except Exception as e:
+        print(f"DEBUG ERROR: {e}")
+    finally:
+        db.close()
+
+    return render_template('user_table_list.html',
+                           records=records,
+                           schema=schema,
+                           title="My Race Data")

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% if record %}Edit{% else %}Add New{% endif %} Race Data - F1 Race Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/add_data.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+</head>
+<body>
+  {% include "navbar.html" %}
+
+  <div class="panel-container">
+    <div class="panel-header">
+      <h1>{% if record %}Edit{% else %}Create New{% endif %} Race Data</h1>
+      <p>{% if record %}Update the race data row below{% else %}Fill in the form to add a new race_data row{% endif %}</p>
+    </div>
+
+    <form id="raceDataForm" class="data-entry-form" data-id="{{ record.id if record else '' }}" data-mode="{% if record %}edit{% else %}create{% endif %}">
+
+      <div class="form-group">
+        <label for="race_id">Race</label>
+        <select id="race_id" name="race_id" required>
+          <option value="">-- Select Race --</option>
+          {% for r in races %}
+            <option value="{{ r.id }}" {% if record and record.race_id == r.id %}selected{% endif %}>{{ r.official_name }} ({{ r.year }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="driver_id">Driver</label>
+        <select id="driver_id" name="driver_id" required>
+          <option value="">-- Select Driver --</option>
+          {% for d in drivers %}
+            <option value="{{ d.id }}" {% if record and record.driver_id == d.id %}selected{% endif %}>{{ d.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="constructor_id">Constructor</label>
+        <select id="constructor_id" name="constructor_id" required>
+          <option value="">-- Select Constructor --</option>
+          {% for c in constructors %}
+            <option value="{{ c.id }}" {% if record and record.constructor_id == c.id %}selected{% endif %}>{{ c.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="position_display_order">Position (display order)</label>
+        <input type="number" id="position_display_order" name="position_display_order" step="1" value="{{ record.position_display_order if record and record.position_display_order is not none else '' }}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="driver_number">Driver Number</label>
+        <input type="text" id="driver_number" name="driver_number" value="{{ record.driver_number if record and record.driver_number is not none else '' }}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="race_points">Race Points</label>
+        <input type="number" id="race_points" name="race_points" step="0.01" value="{{ record.race_points if record and record.race_points is not none else '' }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="race_pole_position">Pole Position</label>
+        <select id="race_pole_position" name="race_pole_position">
+          <option value="">-- Select --</option>
+          <option value="true" {% if record and record.race_pole_position %}selected{% endif %}>Yes</option>
+          <option value="false" {% if record and not record.race_pole_position %}selected{% endif %}>No</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="race_qualification_position_number">Qualification Position</label>
+        <input type="number" id="race_qualification_position_number" name="race_qualification_position_number" step="1" value="{{ record.race_qualification_position_number if record and record.race_qualification_position_number is not none else '' }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="race_grid_position_number">Grid Position</label>
+        <input type="number" id="race_grid_position_number" name="race_grid_position_number" step="1" value="{{ record.race_grid_position_number if record and record.race_grid_position_number is not none else '' }}" />
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-panel btn-panel-primary">{% if record %}Update{% else %}Create{% endif %} Race Data</button>
+        <a href="{{ url_for('user.user_race_data_list') }}" class="btn-panel btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('raceDataForm');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = form.getAttribute('data-id');
+        const mode = form.getAttribute('data-mode');
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // normalize boolean
+        if (data.race_pole_position === '') data.race_pole_position = null;
+        else data.race_pole_position = data.race_pole_position === 'true';
+
+        // numeric conversions
+        ['position_display_order','race_qualification_position_number','race_grid_position_number'].forEach(k => {
+          if (data[k] !== undefined && data[k] !== '') data[k] = parseInt(data[k], 10);
+          else data[k] = null;
+        });
+        if (data.race_points === '') data.race_points = null; else data.race_points = parseFloat(data.race_points);
+
+        const url = mode === 'edit' ? `/api/update-race-data/${id}` : '/api/add-race-data';
+
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const payload = await res.json();
+          if (payload.success) {
+            alert(mode === 'edit' ? 'Race data updated!' : 'Race data created!');
+            window.location.href = "{{ url_for('user.user_race_data_list') }}";
+          } else {
+            alert('Error: ' + payload.error);
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Failed to submit form');
+        }
+      });
+    });
+  </script>
+  <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+</body>
+</html>
