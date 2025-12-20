@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Learn More — F1 Race Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/learn_more.css') }}"/>
+</head>
+<body>
+  {% include "navbar.html" %}
+
+  <main class="learn-page">
+    <section class="learn-hero">
+      <div class="hero-content">
+        <p class="eyebrow">Why F1 Race Analytics?</p>
+        <h1>The control room for every F1 data fan.</h1>
+        <p class="lead">
+          Explore historic grands prix, upload your own simulations, and benchmark drivers, constructors,
+          and tracks using one cohesive toolkit built by enthusiasts for enthusiasts.
+        </p>
+      </div>
+      <div class="hero-panel">
+        <div class="data-callout">
+          <span class="metric">6+</span>
+          <span class="label">interlinked modules</span>
+        </div>
+        <div class="data-callout">
+          <span class="metric">1000s</span>
+          <span class="label">of race results</span>
+        </div>
+        <div class="data-callout">
+          <span class="metric">1</span>
+          <span class="label">dashboard to rule them all</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="learn-highlights">
+      <h2>Everything you need to deep dive into Formula 1</h2>
+      <div class="info-grid">
+        <article>
+          <h3>Live-like Race Explorer</h3>
+          <p>Dive into every official and simulated race with filters for year, round, qualifying format, and more.</p>
+        </article>
+        <article>
+          <h3>Circuit Intelligence</h3>
+          <p>Our new complex SQL powered circuit view crunches average laps, unique winners, and dominant drivers instantly.</p>
+        </article>
+        <article>
+          <h3>Admin Superpowers</h3>
+          <p>Admins receive full CRUD controls on circuits, drivers, races, and even user accounts via a dedicated panel.</p>
+        </article>
+        <article>
+          <h3>User Sandbox</h3>
+          <p>Upload your own custom race data, edit it at any point, or delete runs that no longer reflect your strategy.</p>
+        </article>
+        <article>
+          <h3>Secure Accounts</h3>
+          <p>Registration and login use salted bcrypt hashing with server-side validation so your data stays yours.</p>
+        </article>
+        <article>
+          <h3>Research-Ready Output</h3>
+          <p>Every view ships with clean UI components—search, dropdowns, and paginated tables—ready for demos or reports.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="modules">
+      <h2>Key Modules</h2>
+      <div class="module-grid">
+        <div class="module-card">
+          <p class="kicker">Constructors</p>
+          <h3>Team Performance</h3>
+          <p>Compare constructors, view histories, and keep tabs on your custom entrants.</p>
+        </div>
+        <div class="module-card">
+          <p class="kicker">Drivers</p>
+          <h3>Driver Analytics</h3>
+          <p>Race stats, standings, and career data with powerful filtering.</p>
+        </div>
+        <div class="module-card">
+          <p class="kicker">Races</p>
+          <h3>Granular Results</h3>
+          <p>Review every lap, qualifying format, and participant count in one dashboard.</p>
+        </div>
+        <div class="module-card">
+          <p class="kicker">Circuits</p>
+          <h3>Track Deep Dives</h3>
+          <p>Coordinates, map embeds, winner roll-ups, and trend stats in a single hero view.</p>
+        </div>
+        <div class="module-card">
+          <p class="kicker">User Data</p>
+          <h3>Simulation Uploads</h3>
+          <p>Store your experiments securely and compare against the official datasets.</p>
+        </div>
+        <div class="module-card">
+          <p class="kicker">Admin</p>
+          <h3>Full CRUD</h3>
+          <p>Admins can seed, edit, and prune every table via a purpose-built interface.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="learn-cta">
+      <div class="cta-card">
+        <h2>Ready to join the paddock?</h2>
+        <p>Create an account to unlock the editor-friendly data panel, or continue exploring as a guest.</p>
+        <div class="cta-buttons">
+          <a class="btn primary" href="{{ url_for('auth.register') }}">Create Account</a>
+          <a class="btn ghost" href="{{ url_for('auth.login') }}">I already have one</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+</body>
+</html>

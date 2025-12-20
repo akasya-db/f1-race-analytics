@@ -27,6 +27,17 @@ def index():
         # User is not logged in, show landing page
         return render_template('index.html', authenticated=False, is_admin=is_admin)
 
+@auth_bp.route('/learn-more')
+def learn_more_page():
+    """Public marketing/overview page linked from the landing CTA."""
+    authenticated = 'username' in session
+    return render_template(
+        'learn_more.html',
+        authenticated=authenticated,
+        username=session.get('username'),
+        is_admin=session.get('is_admin', False)
+    )
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     db = DatabaseConnection()
