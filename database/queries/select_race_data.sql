@@ -19,11 +19,11 @@ SELECT
 FROM (
   SELECT DISTINCT ON (race_id, driver_id) *
   FROM race_data
-  ORDER BY race_id, driver_id, id
+  ORDER BY race_id, driver_id, position_display_order NULLS LAST
 ) rd
 JOIN driver d ON rd.driver_id = d.id
 JOIN constructor c ON rd.constructor_id = c.id
 WHERE (%(race_id)s IS NULL OR rd.race_id = %(race_id)s)
   AND (%(is_real)s IS NULL OR rd.is_real = %(is_real)s)
-ORDER BY rd.position_display_order NULLS LAST, rd.id
+ORDER BY rd.race_points DESC NULLS LAST, rd.position_display_order NULLS LAST, rd.id
 LIMIT %(limit)s OFFSET %(offset)s;

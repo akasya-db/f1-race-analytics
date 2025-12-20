@@ -159,26 +159,26 @@ function renderResults(rows) {
     return;
   }
 
-  // Build table: position, driver, constructor, number, grid, qualification, points
+  // Build table: position, number, driver, constructor, grid, qualification, points
   const parts = [];
   parts.push('<h3>Race Results</h3>');
   parts.push('<table class="results-table">');
-  parts.push('<thead><tr><th>#</th><th>Driver</th><th>Constructor</th><th>No</th><th>Grid</th><th>Qual</th><th>Points</th></tr></thead>');
+  parts.push('<thead><tr><th>P</th><th>No</th><th>Driver</th><th>Constructor</th><th>Grid</th><th>Qual</th><th>Points</th></tr></thead>');
   parts.push('<tbody>');
 
-  for (const r of rows) {
+  rows.forEach((r, index) => {
     parts.push(`
       <tr>
-        <td>${r.position_display_order ?? '-'}</td>
+        <td>${index + 1}</td>
+        <td>${r.driver_number ?? '-'}</td>
         <td>${r.driver_name ?? r.driver_id}</td>
         <td>${r.constructor_name ?? r.constructor_id}</td>
-        <td>${r.driver_number ?? '-'}</td>
         <td>${r.race_grid_position_number ?? '-'}</td>
         <td>${r.race_qualification_position_number ?? '-'}</td>
         <td>${r.race_points ?? '-'}</td>
       </tr>
     `);
-  }
+  });
 
   parts.push('</tbody></table>');
   el.innerHTML = parts.join('');
