@@ -5,19 +5,20 @@ async function loadCircuitDetail() {
   try {
     const res = await fetch(`/api/circuits/${encodeURIComponent(circuitId)}`);
     if (!res.ok) throw new Error('Circuit not found');
-    const circuit = await res.json();
-    renderCircuitHero(circuit);
-    renderCircuitOverview(circuit);
+    const payload = await res.json();
+    const circuit = payload.circuit || {};
+    const stats = payload.stats || {};
+    const races = payload.races || [];
+
+    renderCircuitHero(circuit, stats);
+    renderCircuitOverview(circuit, stats);
+    renderCircuitHighlights(stats);
+    renderCircuitMap(circuit);
+    renderCircuitRaces(races);
   } catch (error) {
     console.error('Circuit detail error', error);
     document.getElementById('circuitOverview').innerHTML =
       '<p class="error-state">Unable to load circuit data.</p>';
-  }
-
-  try {
-    await loadCircuitRaces(circuitId);
-  } catch (error) {
-    console.error('Circuit races error', error);
     const racesBox = document.getElementById('circuitRaces');
     if (racesBox) {
       racesBox.innerHTML = '<p class="error-state">Unable to load races.</p>';
@@ -31,6 +32,7 @@ const formatValue = (value, suffix = '') => {
 };
 
 const formatDecimal = (value, digits = 3, suffix = '') => {
+  if (value === null || value === undefined || value === '') return 'N/A';
   const num = Number(value);
   if (!Number.isFinite(num)) return 'N/A';
   return `${num.toFixed(digits)}${suffix}`;
@@ -59,7 +61,7 @@ const formatCoordinatePair = (lat, lon) => {
   return `${formatAxis(latNum, 'N', 'S')}, ${formatAxis(lonNum, 'E', 'W')}`;
 };
 
-function renderCircuitHero(circuit) {
+function renderCircuitHero(circuit, stats = {}) {
   document.getElementById('circuitName').textContent = circuit.full_name || circuit.name;
   document.getElementById('circuitLocation').textContent =
     [circuit.place_name, circuit.country_name].filter(Boolean).join(' • ');
@@ -73,9 +75,7 @@ function renderCircuitHero(circuit) {
         { label: 'Turns', value: formatValue(circuit.turns) },
         { label: 'Direction', value: prettify(circuit.direction) },
         { label: 'Type', value: prettify(circuit.type) },
-        { label: 'Total races', value: formatValue(circuit.total_races_held) },
         { label: 'Country', value: circuit.country_name || 'N/A' },
-        { label: 'City / Place', value: circuit.place_name || 'N/A' },
         { label: 'Coordinates', value: coordinateText }
       ]
         .map(
@@ -91,31 +91,91 @@ function renderCircuitHero(circuit) {
   `;
 }
 
-function renderCircuitOverview(circuit) {
+function renderCircuitOverview(circuit, stats = {}) {
   const coordinateText = formatCoordinatePair(circuit.latitude, circuit.longitude);
   const overview = document.getElementById('circuitOverview');
   overview.innerHTML = `
-    <h3>Track Snapshot</h3>
-    <p>
-      ${circuit.full_name || 'This circuit'} has hosted
-      <strong>${formatValue(circuit.total_races_held)}</strong> races in
-      <strong>${circuit.country_name || 'N/A'}</strong>, near
-      <strong>${circuit.place_name || 'N/A'}</strong>. Its exact coordinates are
-      <strong>${coordinateText}</strong>, giving you a precise spot on the map.
-    </p>
+    <div class="overview-header">
+      <h3>Track Snapshot</h3>
+      <p>
+        ${circuit.full_name || 'This circuit'} spans
+        <strong>${formatDecimal(circuit.length, 3, ' km')}</strong> with
+        <strong>${formatValue(circuit.turns)}</strong> turns in
+        <strong>${prettify(circuit.direction)}</strong> direction. It has hosted
+        <strong>${formatValue(stats.total_races ?? circuit.total_races_held)}</strong> events between
+        <strong>${formatValue(stats.first_year)}</strong> and
+        <strong>${formatValue(stats.last_year)}</strong>, located near
+        <strong>${circuit.place_name || 'N/A'}</strong>,
+        <strong>${circuit.country_name || 'N/A'}</strong>.
+      </p>
+    </div>
+    <div class="snapshot-grid">
+      ${[
+        { label: 'Official Races', value: formatValue(stats.official_races) },
+        { label: 'Average Laps', value: formatDecimal(stats.avg_laps, 1) },
+        { label: 'Unique Winners', value: formatValue(stats.unique_winners) }
+      ]
+        .map(
+          (item) => `
+            <div class="snapshot-tile">
+              <span class="label">${item.label}</span>
+              <span class="value">${item.value}</span>
+            </div>
+          `
+        )
+        .join('')}
+    </div>
   `;
 
-  const mapBox = document.getElementById('circuitMap');
-  mapBox.innerHTML = renderCircuitMap(circuit);
+}
+
+function renderCircuitHighlights(stats = {}) {
+  const highlightContainer = document.getElementById('circuitHighlights');
+  if (!highlightContainer) return;
+
+  const topDriver = stats.top_driver;
+  const highlightItems = [
+    {
+      title: 'Dominant Driver',
+      primary: topDriver ? topDriver.driver_name : 'No data',
+      secondary: topDriver ? `${formatValue(topDriver.wins)} wins` : ''
+    },
+    {
+      title: 'First Event',
+      primary: formatValue(stats.first_year),
+      secondary: 'Historic debut'
+    },
+    {
+      title: 'Most Recent',
+      primary: formatValue(stats.last_year),
+      secondary: 'Latest season'
+    }
+  ];
+
+  highlightContainer.innerHTML = highlightItems
+    .map(
+      (item) => `
+        <div class="highlight-card">
+          <span class="label">${item.title}</span>
+          <span class="value">${item.primary}</span>
+          <span class="meta">${item.secondary}</span>
+        </div>
+      `
+    )
+    .join('');
 }
 
 function renderCircuitMap(circuit) {
+  const mapBox = document.getElementById('circuitMap');
+  if (!mapBox) return;
+
   const coordsAvailable =
     Number.isFinite(Number(circuit.latitude)) && Number.isFinite(Number(circuit.longitude));
   if (!coordsAvailable) {
-    return `
+    mapBox.innerHTML = `
       <div class="map-placeholder">Map preview coming soon.</div>
     `;
+    return;
   }
 
   const lat = Number(circuit.latitude).toFixed(5);
@@ -124,7 +184,7 @@ function renderCircuitMap(circuit) {
   // Use Google Maps embed with zoom animation parameters
   const mapSrc = `https://www.google.com/maps?q=${lat},${lon}&z=13&layer=c&output=embed`;
 
-  return `
+  mapBox.innerHTML = `
     <iframe
       title="Circuit Map"
       src="${mapSrc}"
@@ -134,14 +194,7 @@ function renderCircuitMap(circuit) {
   `;
 }
 
-async function loadCircuitRaces(circuitId) {
-  const res = await fetch(`/api/circuits/${encodeURIComponent(circuitId)}/races`);
-  if (!res.ok) throw new Error('Failed to load races');
-  const payload = await res.json();
-  renderCircuitRaces(payload.races || []);
-}
-
-function renderCircuitRaces(races) {
+function renderCircuitRaces(races = []) {
   const container = document.getElementById('circuitRaces');
   if (!container) return;
 
@@ -154,10 +207,16 @@ function renderCircuitRaces(races) {
     .map((race) => {
       const badgeClass = race.is_real ? 'real' : 'fake';
       const raceUrl = `/races/${race.id}`;
+      const raceMeta = [race.year, race.date].filter(Boolean).join(' • ');
+      const winnerText = race.winner?.driver_name
+        ? `Winner: ${race.winner.driver_name}`
+        : 'Winner TBD';
       return `
         <a class="race-pill" href="${raceUrl}">
           <div class="info">
             <div class="title">${race.official_name || `Round ${race.round}`}</div>
+            <div class="meta">${raceMeta}</div>
+            <div class="meta">${winnerText}</div>
           </div>
           <div class="meta participants">Participants: ${race.participant_count ?? 0}</div>
           <span class="badge ${badgeClass}">${race.is_real ? 'Official' : 'Simulated'}</span>

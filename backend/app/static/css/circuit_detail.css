@@ -29,14 +29,12 @@
 }
 
 .hero-stats{
-  display:flex;
-  flex-wrap:wrap;
-  gap:18px;
+  width:100%;
 }
 
 .stat-row{
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
   gap:18px;
 }
 
@@ -73,6 +71,77 @@
 
 .circuit-overview{
   margin:24px clamp(16px,4vw,60px) 0;
+}
+
+.overview-header p{
+  color:var(--f1-grey);
+  line-height:1.6;
+}
+
+.snapshot-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+  gap:16px;
+  margin-top:18px;
+}
+
+.snapshot-tile{
+  padding:16px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.02);
+}
+
+.snapshot-tile .label{
+  color:var(--f1-grey);
+  font-size:12px;
+  letter-spacing:0.4px;
+  text-transform:uppercase;
+}
+
+.snapshot-tile .value{
+  display:block;
+  margin-top:6px;
+  font-size:22px;
+  font-weight:600;
+}
+
+.circuit-highlights{
+  margin:24px clamp(16px,4vw,60px) 0;
+}
+
+.highlight-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:18px;
+  margin-top:18px;
+}
+
+.highlight-card{
+  padding:20px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:linear-gradient(135deg, rgba(255,30,21,0.08), rgba(0,0,0,0.5));
+  box-shadow:0 12px 28px rgba(0,0,0,0.35);
+}
+
+.highlight-card .label{
+  font-size:12px;
+  letter-spacing:0.4px;
+  color:var(--f1-grey);
+  text-transform:uppercase;
+}
+
+.highlight-card .value{
+  display:block;
+  font-size:26px;
+  font-weight:700;
+  margin:4px 0 2px;
+}
+
+.highlight-card .meta{
+  color:var(--f1-grey);
+  font-size:13px;
 }
 
 .circuit-map{
@@ -120,7 +189,7 @@
 
 .race-pill{
   display:grid;
-  grid-template-columns:2fr 1fr auto;
+  grid-template-columns:minmax(0, 3fr) minmax(0, 1fr) auto;
   align-items:center;
   gap:18px;
   padding:14px 18px;
@@ -164,8 +233,14 @@
   color:var(--f1-green);
 }
 
-@media (max-width: 768px){
-  .hero-stats{
-    flex-direction:column;
+@media (max-width: 1024px){
+  .stat-row{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 640px){
+  .stat-row{
+    grid-template-columns:minmax(0,1fr);
   }
 }

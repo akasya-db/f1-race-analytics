@@ -640,28 +640,163 @@ def get_circuit_by_id(circuit_id):
     """Get circuit details by ID."""
     db = DatabaseConnection()
     try:
-        db.execute("""
+        db.execute(
+            """
+            WITH circuit_base AS (
+                SELECT 
+                    c.id,
+                    c.name,
+                    c.full_name,
+                    c.place_name,
+                    c.type,
+                    c.direction,
+                    c.length,
+                    c.turns,
+                    c.total_races_held,
+                    c.latitude,
+                    c.longitude,
+                    co.name AS country_name
+                FROM circuit c
+                LEFT JOIN country co ON c.country_id = co.id
+                WHERE c.id = %(circuit_id)s
+                LIMIT 1
+            ),
+            race_rollup AS (
+                SELECT 
+                    r.circuit_id,
+                    COUNT(*) AS total_races,
+                    COUNT(*) FILTER (WHERE r.is_real) AS official_races,
+                    COUNT(*) FILTER (WHERE NOT r.is_real) AS simulated_races,
+                    MIN(r.year) AS first_year,
+                    MAX(r.year) AS last_year,
+                    AVG(r.laps)::NUMERIC(10,2) AS avg_laps
+                FROM race r
+                WHERE r.circuit_id = %(circuit_id)s
+                GROUP BY r.circuit_id
+            ),
+            winner_stats AS (
+                SELECT 
+                    r.circuit_id,
+                    COUNT(DISTINCT CASE WHEN rd.position_display_order = 1 THEN rd.driver_id END) AS unique_winners
+                FROM race r
+                LEFT JOIN race_data rd ON rd.race_id = r.id
+                WHERE r.circuit_id = %(circuit_id)s
+                GROUP BY r.circuit_id
+            ),
+            dominant_driver AS (
+                SELECT
+                    r.circuit_id,
+                    rd.driver_id,
+                    d.full_name,
+                    COUNT(*) AS wins
+                FROM race r
+                JOIN race_data rd ON rd.race_id = r.id AND rd.position_display_order = 1
+                JOIN driver d ON d.id = rd.driver_id
+                WHERE r.circuit_id = %(circuit_id)s
+                GROUP BY r.circuit_id, rd.driver_id, d.full_name
+                ORDER BY wins DESC
+                LIMIT 1
+            ),
+            race_payload AS (
+                SELECT 
+                    r.circuit_id,
+                    json_agg(
+                        json_build_object(
+                            'id', r.id,
+                            'year', r.year,
+                            'round', r.round,
+                            'official_name', r.official_name,
+                            'date', r.date,
+                            'qualifying_format', r.qualifying_format,
+                            'laps', r.laps,
+                            'is_real', r.is_real,
+                            'participant_count', (
+                                SELECT COUNT(*) 
+                                FROM race_data rd 
+                                WHERE rd.race_id = r.id
+                            ),
+                            'winner', (
+                                SELECT json_build_object(
+                                    'driver_id', d.id,
+                                    'driver_name', d.full_name,
+                                    'constructor_name', cons.full_name
+                                )
+                                FROM race_data rd2
+                                JOIN driver d ON rd2.driver_id = d.id
+                                LEFT JOIN constructor cons ON cons.id = rd2.constructor_id
+                                WHERE rd2.race_id = r.id
+                                ORDER BY rd2.position_display_order ASC
+                                LIMIT 1
+                            )
+                        )
+                        ORDER BY r.year DESC, r.round DESC
+                    ) AS races
+                FROM race r
+                WHERE r.circuit_id = %(circuit_id)s
+                GROUP BY r.circuit_id
+            )
             SELECT 
-                c.id,
-                c.name,
-                c.full_name,
-                c.place_name,
-                c.type,
-                c.direction,
-                c.length,
-                c.turns,
-                c.total_races_held,
-                c.latitude,
-                c.longitude,
-                co.name AS country_name
-            FROM circuit c
-            LEFT JOIN country co ON c.country_id = co.id
-            WHERE c.id = %s
-        """, (circuit_id,))
+                cb.*,
+                rr.total_races,
+                rr.official_races,
+                rr.simulated_races,
+                rr.first_year,
+                rr.last_year,
+                rr.avg_laps,
+                ws.unique_winners,
+                dd.driver_id AS top_driver_id,
+                dd.full_name AS top_driver_name,
+                dd.wins AS top_driver_wins,
+                rp.races
+            FROM circuit_base cb
+            LEFT JOIN race_rollup rr ON rr.circuit_id = cb.id
+            LEFT JOIN winner_stats ws ON ws.circuit_id = cb.id
+            LEFT JOIN dominant_driver dd ON dd.circuit_id = cb.id
+            LEFT JOIN race_payload rp ON rp.circuit_id = cb.id
+            """,
+            {'circuit_id': circuit_id},
+        )
         row = db.fetchone()
         if not row:
             return jsonify({'error': 'Circuit not found'}), 404
-        return jsonify(dict(row))
+
+        payload = dict(row)
+        circuit = {
+            'id': payload.get('id'),
+            'name': payload.get('name'),
+            'full_name': payload.get('full_name'),
+            'place_name': payload.get('place_name'),
+            'type': payload.get('type'),
+            'direction': payload.get('direction'),
+            'length': payload.get('length'),
+            'turns': payload.get('turns'),
+            'total_races_held': payload.get('total_races_held'),
+            'latitude': payload.get('latitude'),
+            'longitude': payload.get('longitude'),
+            'country_name': payload.get('country_name')
+        }
+        stats = {
+            'total_races': payload.get('total_races') or 0,
+            'official_races': payload.get('official_races') or 0,
+            'simulated_races': payload.get('simulated_races') or 0,
+            'first_year': payload.get('first_year'),
+            'last_year': payload.get('last_year'),
+            'avg_laps': float(payload['avg_laps']) if payload.get('avg_laps') is not None else None,
+            'unique_winners': payload.get('unique_winners') or 0,
+            'top_driver': {
+                'driver_id': payload.get('top_driver_id'),
+                'driver_name': payload.get('top_driver_name'),
+                'wins': payload.get('top_driver_wins')
+            } if payload.get('top_driver_id') else None
+        }
+
+        response = {
+            'circuit': circuit,
+            'stats': stats,
+            'races': payload.get('races') or []
+        }
+
+        return jsonify(response)
     except Exception as e:
         print(f"Error fetching circuit: {e}")
         return jsonify({'error': str(e)}), 500
