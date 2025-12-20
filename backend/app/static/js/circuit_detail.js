@@ -133,12 +133,16 @@ function renderCircuitHighlights(stats = {}) {
   const highlightContainer = document.getElementById('circuitHighlights');
   if (!highlightContainer) return;
 
-  const topDriver = stats.top_driver;
   const highlightItems = [
     {
-      title: 'Dominant Driver',
-      primary: topDriver ? topDriver.driver_name : 'No data',
-      secondary: topDriver ? `${formatValue(topDriver.wins)} wins` : ''
+      title: 'Home Constructors',
+      primary: formatValue(stats.home_constructors),
+      secondary: 'Constructors from this circuit’s country'
+    },
+    {
+      title: 'Home Drivers',
+      primary: formatValue(stats.home_drivers),
+      secondary: 'Drivers from this circuit’s country'
     },
     {
       title: 'First Event',

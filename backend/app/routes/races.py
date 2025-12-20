@@ -683,19 +683,25 @@ def get_circuit_by_id(circuit_id):
                 WHERE r.circuit_id = %(circuit_id)s
                 GROUP BY r.circuit_id
             ),
-            dominant_driver AS (
-                SELECT
-                    r.circuit_id,
-                    rd.driver_id,
-                    d.full_name,
-                    COUNT(*) AS wins
-                FROM race r
-                JOIN race_data rd ON rd.race_id = r.id AND rd.position_display_order = 1
-                JOIN driver d ON d.id = rd.driver_id
-                WHERE r.circuit_id = %(circuit_id)s
-                GROUP BY r.circuit_id, rd.driver_id, d.full_name
-                ORDER BY wins DESC
-                LIMIT 1
+            home_driver_counts AS (
+                SELECT 
+                    c.id AS circuit_id,
+                    COUNT(DISTINCT d.id) AS home_drivers
+                FROM circuit c
+                LEFT JOIN country co ON c.country_id = co.id
+                LEFT JOIN driver d ON d.nationality_country_id = co.id
+                WHERE c.id = %(circuit_id)s
+                GROUP BY c.id
+            ),
+            home_constructor_counts AS (
+                SELECT 
+                    c.id AS circuit_id,
+                    COUNT(DISTINCT cons.id) AS home_constructors
+                FROM circuit c
+                LEFT JOIN country co ON c.country_id = co.id
+                LEFT JOIN constructor cons ON cons.country_id = co.id
+                WHERE c.id = %(circuit_id)s
+                GROUP BY c.id
             ),
             race_payload AS (
                 SELECT 
@@ -744,14 +750,14 @@ def get_circuit_by_id(circuit_id):
                 rr.last_year,
                 rr.avg_laps,
                 ws.unique_winners,
-                dd.driver_id AS top_driver_id,
-                dd.full_name AS top_driver_name,
-                dd.wins AS top_driver_wins,
+                hd.home_drivers,
+                hc.home_constructors,
                 rp.races
             FROM circuit_base cb
             LEFT JOIN race_rollup rr ON rr.circuit_id = cb.id
             LEFT JOIN winner_stats ws ON ws.circuit_id = cb.id
-            LEFT JOIN dominant_driver dd ON dd.circuit_id = cb.id
+            LEFT JOIN home_driver_counts hd ON hd.circuit_id = cb.id
+            LEFT JOIN home_constructor_counts hc ON hc.circuit_id = cb.id
             LEFT JOIN race_payload rp ON rp.circuit_id = cb.id
             """,
             {'circuit_id': circuit_id},
@@ -783,11 +789,8 @@ def get_circuit_by_id(circuit_id):
             'last_year': payload.get('last_year'),
             'avg_laps': float(payload['avg_laps']) if payload.get('avg_laps') is not None else None,
             'unique_winners': payload.get('unique_winners') or 0,
-            'top_driver': {
-                'driver_id': payload.get('top_driver_id'),
-                'driver_name': payload.get('top_driver_name'),
-                'wins': payload.get('top_driver_wins')
-            } if payload.get('top_driver_id') else None
+            'home_drivers': payload.get('home_drivers') or 0,
+            'home_constructors': payload.get('home_constructors') or 0
         }
 
         response = {
