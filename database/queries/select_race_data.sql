@@ -16,7 +16,11 @@ SELECT
   rd.is_real,
   rd.created_at,
   COUNT(*) OVER() AS full_count
-FROM race_data rd
+FROM (
+  SELECT DISTINCT ON (race_id, driver_id) *
+  FROM race_data
+  ORDER BY race_id, driver_id, id
+) rd
 JOIN driver d ON rd.driver_id = d.id
 JOIN constructor c ON rd.constructor_id = c.id
 WHERE (%(race_id)s IS NULL OR rd.race_id = %(race_id)s)
