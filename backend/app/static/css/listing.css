@@ -799,21 +799,22 @@ a.card, a.card:visited, a.card:hover, a.card:active {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  justify-content: flex-end;
 }
 
 .radio-group .filter-label {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.1px;
   color: var(--f1-grey);
-  margin-bottom: 4px;
 }
 
 .radio-options {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  align-items: center;
+  min-height: 38px;
 }
 
 .radio-options label {
