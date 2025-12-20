@@ -838,6 +838,122 @@ a.card, a.card:visited, a.card:hover, a.card:active {
   cursor: pointer;
 }
 
+/* Searchable Select Dropdown */
+.searchable-select {
+  position: relative;
+  width: 100%;
+  min-width: 200px;
+}
+
+.searchable-select-input {
+  width: 100%;
+  padding: 8px 32px 8px 12px !important;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(4,6,9,0.95);
+  color: var(--f1-white);
+  font-size: 13px;
+  font-family: Poppins, system-ui;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.searchable-select-input::placeholder {
+  color: rgba(169,189,209,0.65);
+}
+
+.searchable-select-input:focus {
+  border-color: var(--f1-red);
+  box-shadow: 0 0 0 1px rgba(255,30,21,0.35);
+}
+
+.searchable-select::after {
+  content: '▼';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--f1-grey);
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.searchable-select.open::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.searchable-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 250px;
+  overflow-y: auto;
+  background: #0f151c;
+  border: 1px solid rgba(255,30,21,0.3);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  z-index: 1000;
+  display: none;
+}
+
+.searchable-select.open .searchable-select-dropdown {
+  display: block;
+}
+
+.searchable-select-option {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--f1-grey);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.searchable-select-option:last-child {
+  border-bottom: none;
+}
+
+.searchable-select-option:hover,
+.searchable-select-option.highlighted {
+  background: rgba(255,30,21,0.15);
+  color: var(--f1-white);
+}
+
+.searchable-select-option.selected {
+  background: rgba(255,30,21,0.2);
+  color: var(--f1-white);
+}
+
+.searchable-select-no-results {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: rgba(169,189,209,0.5);
+  text-align: center;
+  font-style: italic;
+}
+
+/* Scrollbar styling for dropdown */
+.searchable-select-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255,30,21,0.4);
+  border-radius: 3px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,30,21,0.6);
+}
+
 /* Buttons in filter bar */
 
 .filter-actions{

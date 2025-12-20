@@ -31,6 +31,8 @@ WHERE
     AND
     (%(round)s IS NULL OR r.round = %(round)s)
     AND
+    (%(circuit_id)s IS NULL OR r.circuit_id = %(circuit_id)s)
+    AND
     (%(official_name)s IS NULL OR r.official_name ILIKE '%%' || %(official_name)s || '%%')
     AND
     (%(laps_min)s IS NULL OR r.laps >= %(laps_min)s)

@@ -9,6 +9,7 @@ async function fetchRaces(page = 1) {
   // get values from HTML inputs
   const year = document.getElementById('filterYear')?.value || '';
   const round = document.getElementById('filterRound')?.value || '';
+  const circuitId = document.getElementById('filterCircuit')?.value || '';
   const dateFrom = document.getElementById('filterDateFrom')?.value || '';
   const dateTo = document.getElementById('filterDateTo')?.value || '';
   const officialName = document.getElementById('filterOfficialName')?.value || '';
@@ -21,6 +22,7 @@ async function fetchRaces(page = 1) {
   params.append('page', page);
   if (year) params.append('year', year);
   if (round) params.append('round', round);
+  if (circuitId) params.append('circuit_id', circuitId);
   if (dateFrom) params.append('date_from', dateFrom);
   if (dateTo) params.append('date_to', dateTo);
   if (officialName) params.append('official_name', officialName);
@@ -151,9 +153,165 @@ function setupFilters() {
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       form.reset();
+      // Reset the searchable circuit dropdown
+      const circuitInput = document.getElementById('filterCircuitSearch');
+      const circuitHidden = document.getElementById('filterCircuit');
+      if (circuitInput) circuitInput.value = '';
+      if (circuitInput) circuitInput.placeholder = 'All Circuits';
+      if (circuitHidden) circuitHidden.value = '';
       fetchRaces(1);
     });
   }
+}
+
+// Circuit dropdown data storage
+let allCircuits = [];
+
+// Fetch and populate circuits dropdown
+async function loadCircuits() {
+  const wrapper = document.getElementById('circuitSelectWrapper');
+  const dropdown = document.getElementById('circuitDropdown');
+  const searchInput = document.getElementById('filterCircuitSearch');
+  const hiddenInput = document.getElementById('filterCircuit');
+  
+  if (!wrapper || !dropdown || !searchInput || !hiddenInput) return;
+
+  try {
+    const response = await fetch('/api/circuits');
+    if (!response.ok) throw new Error('Failed to fetch circuits');
+    
+    const data = await response.json();
+    allCircuits = data.circuits;
+    
+    // Render initial dropdown options
+    renderCircuitOptions(allCircuits);
+    
+    // Setup event listeners
+    setupCircuitDropdown(wrapper, dropdown, searchInput, hiddenInput);
+    
+  } catch (error) {
+    console.error('Error loading circuits:', error);
+  }
+}
+
+function renderCircuitOptions(circuits) {
+  const dropdown = document.getElementById('circuitDropdown');
+  if (!dropdown) return;
+  
+  if (circuits.length === 0) {
+    dropdown.innerHTML = '<div class="searchable-select-no-results">No circuits found</div>';
+    return;
+  }
+  
+  // Add "All Circuits" option first
+  let html = '<div class="searchable-select-option" data-value="" data-name="All Circuits">All Circuits</div>';
+  
+  // Add circuit options
+  html += circuits.map(circuit => {
+    const displayName = `${circuit.full_name} (${circuit.country_name || circuit.place_name || 'Unknown'})`;
+    return `<div class="searchable-select-option" data-value="${circuit.id}" data-name="${displayName}">${displayName}</div>`;
+  }).join('');
+  
+  dropdown.innerHTML = html;
+}
+
+function setupCircuitDropdown(wrapper, dropdown, searchInput, hiddenInput) {
+  // Toggle dropdown on input click
+  searchInput.addEventListener('click', (e) => {
+    e.stopPropagation();
+    wrapper.classList.toggle('open');
+  });
+  
+  // Filter options as user types
+  searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    wrapper.classList.add('open');
+    
+    if (!searchTerm) {
+      renderCircuitOptions(allCircuits);
+    } else {
+      const filtered = allCircuits.filter(circuit => {
+        const name = circuit.full_name.toLowerCase();
+        const country = (circuit.country_name || circuit.place_name || '').toLowerCase();
+        return name.includes(searchTerm) || country.includes(searchTerm);
+      });
+      renderCircuitOptions(filtered);
+    }
+    
+    // Re-attach click handlers to new options
+    attachOptionHandlers(wrapper, dropdown, searchInput, hiddenInput);
+  });
+  
+  // Handle keyboard navigation
+  searchInput.addEventListener('keydown', (e) => {
+    const options = dropdown.querySelectorAll('.searchable-select-option');
+    const highlighted = dropdown.querySelector('.searchable-select-option.highlighted');
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      wrapper.classList.add('open');
+      if (!highlighted && options.length > 0) {
+        options[0].classList.add('highlighted');
+      } else if (highlighted && highlighted.nextElementSibling) {
+        highlighted.classList.remove('highlighted');
+        highlighted.nextElementSibling.classList.add('highlighted');
+        highlighted.nextElementSibling.scrollIntoView({ block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (highlighted && highlighted.previousElementSibling) {
+        highlighted.classList.remove('highlighted');
+        highlighted.previousElementSibling.classList.add('highlighted');
+        highlighted.previousElementSibling.scrollIntoView({ block: 'nearest' });
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlighted) {
+        selectCircuitOption(highlighted, searchInput, hiddenInput, wrapper);
+      }
+    } else if (e.key === 'Escape') {
+      wrapper.classList.remove('open');
+    }
+  });
+  
+  // Attach click handlers to options
+  attachOptionHandlers(wrapper, dropdown, searchInput, hiddenInput);
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target)) {
+      wrapper.classList.remove('open');
+    }
+  });
+}
+
+function attachOptionHandlers(wrapper, dropdown, searchInput, hiddenInput) {
+  const options = dropdown.querySelectorAll('.searchable-select-option');
+  options.forEach(option => {
+    option.addEventListener('click', () => {
+      selectCircuitOption(option, searchInput, hiddenInput, wrapper);
+    });
+  });
+}
+
+function selectCircuitOption(option, searchInput, hiddenInput, wrapper) {
+  const value = option.dataset.value;
+  const name = option.dataset.name;
+  
+  hiddenInput.value = value;
+  searchInput.value = value ? name : '';
+  searchInput.placeholder = value ? 'All Circuits' : 'All Circuits';
+  
+  // Update selected state
+  wrapper.querySelectorAll('.searchable-select-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  option.classList.add('selected');
+  
+  wrapper.classList.remove('open');
+  
+  // Trigger filter
+  fetchRaces(1);
 }
 
 
@@ -165,6 +323,7 @@ document.getElementById('raceModal')?.remove?.();
 // Başlat
 window.addEventListener('DOMContentLoaded', () => {
   setupFilters();
+  loadCircuits(); // Load circuits for dropdown
 
   if (window.flatpickr) {
     flatpickr('#filterDateFrom', { dateFormat: 'Y-m-d', allowInput: false });

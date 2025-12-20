@@ -66,6 +66,7 @@ def get_races_data():
     raw_date_to = request.args.get('date_to')
     raw_official_name = request.args.get('official_name')
     raw_qualifying_format = request.args.get('qualifying_format')
+    raw_circuit_id = request.args.get('circuit_id')
     raw_laps_min = request.args.get('laps_min')
     raw_laps_max = request.args.get('laps_max')
     raw_is_real = request.args.get('is_real')
@@ -85,6 +86,7 @@ def get_races_data():
     filters = {
         'year': int(raw_year) if raw_year else None,
         'round': int(raw_round) if raw_round else None,
+        'circuit_id': raw_circuit_id if raw_circuit_id else None,
         'date_from': raw_date_from if raw_date_from else None,
         'date_to': raw_date_to if raw_date_to else None,
         'official_name': raw_official_name if raw_official_name else None,
@@ -121,6 +123,27 @@ def get_races_data():
         print(f"Error fetching constructors: {e}")
         return jsonify({'error': 'Internal Server Error'}), 500
 
+    finally:
+        db.close()
+
+
+@races_bp.route("/api/circuits")
+def get_circuits_list():
+    """API endpoint to get all circuits for dropdown filter"""
+    db = DatabaseConnection()
+    try:
+        db.execute("""
+            SELECT c.id, c.full_name, c.place_name, co.name as country_name
+            FROM circuit c
+            LEFT JOIN country co ON c.country_id = co.id
+            ORDER BY c.full_name ASC
+        """)
+        results = db.fetchall()
+        circuits = [dict(row) for row in results]
+        return jsonify({'circuits': circuits})
+    except Exception as e:
+        print(f"Error fetching circuits: {e}")
+        return jsonify({'error': 'Internal Server Error'}), 500
     finally:
         db.close()
 
