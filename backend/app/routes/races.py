@@ -702,6 +702,61 @@ def get_races_for_circuit(circuit_id):
     finally:
         db.close()
 
+@races_bp.route("/api/races/<int:race_id>/constructor-standings")
+def get_race_constructor_standings(race_id):
+    """Get constructor championship standings after a specific race."""
+    db = DatabaseConnection()
+    try:
+        db.execute("""
+            SELECT 
+                rcs.position_number,
+                rcs.points,
+                c.id AS constructor_id,
+                c.full_name AS constructor_name,
+                co.name AS country_name
+            FROM race_constructor_standing rcs
+            JOIN constructor c ON rcs.constructor_id = c.id
+            LEFT JOIN country co ON c.country_id = co.id
+            WHERE rcs.race_id = %s
+            ORDER BY rcs.position_number ASC
+        """, (race_id,))
+        rows = db.fetchall()
+        return jsonify({'standings': [dict(r) for r in rows]})
+    except Exception as e:
+        print(f"Error fetching constructor standings: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@races_bp.route("/api/races/<int:race_id>/driver-standings")
+def get_race_driver_standings(race_id):
+    """Get driver championship standings after a specific race."""
+    db = DatabaseConnection()
+    try:
+        db.execute("""
+            SELECT 
+                rds.position_number,
+                rds.points,
+                d.id AS driver_id,
+                d.full_name AS driver_name,
+                d.abbreviation,
+                co.name AS nationality
+            FROM race_driver_standing rds
+            JOIN driver d ON rds.driver_id = d.id
+            LEFT JOIN country co ON d.nationality_country_id = co.id
+            WHERE rds.race_id = %s
+            ORDER BY rds.position_number ASC
+        """, (race_id,))
+        rows = db.fetchall()
+        return jsonify({'standings': [dict(r) for r in rows]})
+    except Exception as e:
+        print(f"Error fetching driver standings: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
 @races_bp.route("/api/stats/races-by-year")
 def races_by_year():
     """Return aggregated race statistics grouped by year with pagination and filtering."""

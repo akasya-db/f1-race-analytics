@@ -2,99 +2,240 @@
 
 /* Make sure content sits below the absolute-positioned navbar */
 .content-wrapper {
-  padding-top: 90px; /* leave space for navbar (20px padding + logo height) */
+  padding-top: 90px;
 }
 
-.race-detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 360px; /* main left column for race info + results, right column for circuit */
-  gap: 24px;
-  align-items: start;
+/* Two-column flexbox layout - no gaps! */
+.race-detail-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
 }
 
-.race-info {
-  grid-column: 1 / 2;
+.left-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
 }
 
-.circuit-info {
-  grid-column: 2 / 3;
+.right-column {
+  width: 380px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Race info - compact */
+.race-info h2 {
+  margin: 0 0 12px 0;
+  font-size: 1.4rem;
+}
+
+.race-info .race-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+}
+
+.race-info .race-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.race-info .race-meta-item .label {
+  color: var(--f1-grey);
+  font-weight: 400;
+}
+
+.race-info .race-meta-item .value {
+  color: var(--f1-white);
+  font-weight: 600;
+}
+
+/* Circuit info */
+.circuit-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
 }
 
 .circuit-location {
   color: var(--f1-grey);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
 }
 
 .circuit-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
 
 .circuit-stat {
-  padding: 12px;
+  padding: 10px;
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255,255,255,0.02);
 }
 
 .circuit-stat .label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
   color: var(--f1-grey);
 }
 
 .circuit-stat .value {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--f1-white);
 }
 
-.detail-actions{
-  margin-top:16px;
-  display:flex;
-  justify-content:center;
+.detail-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
 }
 
-.detail-actions .btn{
-  min-width:220px;
-  text-align:center;
+.detail-actions .btn {
+  min-width: 160px;
+  text-align: center;
+  font-size: 12px;
+  padding: 8px 14px;
 }
 
-.results-box {
-  grid-column: 1 / 3; /* span both columns */
+/* Results box */
+.results-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
 }
 
-/* Responsive adjustments */
-@media (max-width: 900px) {
-  .race-detail-grid {
-    grid-template-columns: 1fr;
-  }
-  .results-box { grid-column: 1 / 2; }
-  .circuit-info { grid-column: 1 / 2; }
+/* Standings boxes */
+.standings-box {
+  max-height: 260px;
+  overflow-y: auto;
 }
 
-/* Small visual tweaks for the cards on detail page */
-.race-info h2, .circuit-info h3, .results-box h3 {
-  margin-top: 0;
+.standings-box h3 {
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+  position: sticky;
+  top: 0;
+  background: var(--card-bg, #1a1a2e);
+  padding-bottom: 6px;
+  z-index: 1;
 }
 
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.standings-table thead {
+  position: sticky;
+  top: 28px;
+  background: var(--card-bg, #1a1a2e);
+  z-index: 1;
+}
+
+.standings-table thead th {
+  text-align: left;
+  padding: 6px 8px;
+  font-size: 10px;
+  color: var(--f1-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.standings-table tbody td {
+  padding: 6px 8px;
+  font-size: 12px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.standings-table tbody tr:nth-child(1) td {
+  color: var(--f1-yellow, #ffd038);
+  font-weight: 600;
+}
+
+.standings-table tbody tr:nth-child(2) td {
+  color: #c0c0c0;
+}
+
+.standings-table tbody tr:nth-child(3) td {
+  color: #cd7f32;
+}
+
+/* Results table styling */
 .results-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 12px;
 }
 
 .results-table thead th {
-  text-align:left;
-  padding:10px;
-  font-size:13px;
-  color:var(--f1-grey);
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--f1-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .results-table tbody td {
-  padding:10px;
-  border-top:1px solid rgba(255,255,255,0.04);
+  padding: 8px 10px;
+  font-size: 13px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.results-table tbody tr:nth-child(1) td {
+  color: var(--f1-yellow, #ffd038);
+  font-weight: 600;
+}
+
+.results-table tbody tr:nth-child(2) td {
+  color: #c0c0c0;
+}
+
+.results-table tbody tr:nth-child(3) td {
+  color: #cd7f32;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1000px) {
+  .race-detail-layout {
+    flex-direction: column;
+  }
+  .right-column {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .right-column .circuit-info {
+    width: 100%;
+  }
+  .standings-box {
+    flex: 1;
+    min-width: 280px;
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 600px) {
+  .right-column {
+    flex-direction: column;
+  }
+  .standings-box {
+    max-height: 260px;
+  }
+  .race-info .race-meta {
+    gap: 10px 16px;
+  }
+  .circuit-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

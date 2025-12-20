@@ -14,17 +14,28 @@
   {% include "navbar.html" %}
 
   <div class="content-wrapper">
-    <div class="race-detail-grid">
-      <div class="race-info card" id="raceInfo">
-        <!-- Race basic info (top-left) -->
+    <div class="race-detail-layout">
+      <!-- Left column: Race info + Results (flows naturally) -->
+      <div class="left-column">
+        <div class="race-info card" id="raceInfo">
+          <!-- Race basic info (compact) -->
+        </div>
+        <div class="results-box card" id="resultsBox">
+          <!-- Race Results -->
+        </div>
       </div>
 
-      <div class="circuit-info card" id="circuitInfo">
-        <!-- Circuit info (top-right) -->
-      </div>
-
-      <div class="results-box card" id="resultsBox">
-        <!-- Results (bottom-left larger) -->
+      <!-- Right column: Circuit info + Standings -->
+      <div class="right-column">
+        <div class="circuit-info card" id="circuitInfo">
+          <!-- Circuit info -->
+        </div>
+        <div class="standings-box card" id="driverStandingsBox">
+          <!-- Driver standings after this race -->
+        </div>
+        <div class="standings-box card" id="constructorStandingsBox">
+          <!-- Constructor standings after this race -->
+        </div>
       </div>
     </div>
   </div>
