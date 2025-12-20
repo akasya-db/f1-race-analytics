@@ -73,7 +73,13 @@ def get_races_data():
     per_page = 12
     offset = (page - 1) * per_page
 
-    is_real_value = True if raw_is_real == 'true' else None
+    # Handle is_real filter: 'true' = real only, 'false' = user-generated only, None = all
+    if raw_is_real == 'true':
+        is_real_value = True
+    elif raw_is_real == 'false':
+        is_real_value = False
+    else:
+        is_real_value = None
 
     # convert empty strings to None
     filters = {

@@ -13,7 +13,8 @@ async function fetchRaces(page = 1) {
   const dateTo = document.getElementById('filterDateTo')?.value || '';
   const officialName = document.getElementById('filterOfficialName')?.value || '';
   const qualifyingFormat = document.getElementById('filterQualifyingFormat')?.value || '';
-  const isRealChecked = document.getElementById('filterIsReal')?.checked || false;
+  const raceTypeRadio = document.querySelector('input[name="raceType"]:checked');
+  const raceType = raceTypeRadio ? raceTypeRadio.value : 'all';
   
   // create URL parameters
   const params = new URLSearchParams();
@@ -24,7 +25,8 @@ async function fetchRaces(page = 1) {
   if (dateTo) params.append('date_to', dateTo);
   if (officialName) params.append('official_name', officialName);
   if (qualifyingFormat) params.append('qualifying_format', qualifyingFormat);
-  if (isRealChecked) params.append('is_real', 'true');
+  if (raceType === 'real') params.append('is_real', 'true');
+  if (raceType === 'user') params.append('is_real', 'false');
 
   try {
     const response = await fetch(`/api/races?${params.toString()}`);

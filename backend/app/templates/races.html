@@ -67,11 +67,22 @@
         </select>
       </div>
 
-      <div class="filter-group checkbox-group">
-        <label>
-          <input type="checkbox" id="filterIsReal"/>
-          Only real races
-        </label>
+      <div class="filter-group radio-group">
+        <label class="filter-label">Race Type</label>
+        <div class="radio-options">
+          <label>
+            <input type="radio" name="raceType" value="all" checked/>
+            All
+          </label>
+          <label>
+            <input type="radio" name="raceType" value="real"/>
+            Real
+          </label>
+          <label>
+            <input type="radio" name="raceType" value="user"/>
+            User-generated
+          </label>
+        </div>
       </div>
 
       <div class="filter-actions">

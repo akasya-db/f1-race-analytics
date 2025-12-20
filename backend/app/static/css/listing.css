@@ -793,6 +793,50 @@ a.card, a.card:visited, a.card:hover, a.card:active {
   accent-color:var(--f1-red);
 }
 
+/* Radio group for race type filter */
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.radio-group .filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--f1-grey);
+  margin-bottom: 4px;
+}
+
+.radio-options {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radio-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--f1-grey);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.radio-options label:hover {
+  color: var(--f1-white);
+}
+
+.radio-options input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--f1-red);
+  cursor: pointer;
+}
+
 /* Buttons in filter bar */
 
 .filter-actions{

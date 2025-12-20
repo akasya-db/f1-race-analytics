@@ -43,5 +43,5 @@ WHERE
     AND
     (%(qualifying_format)s IS NULL OR r.qualifying_format = %(qualifying_format)s)
     AND
-    (%(is_real)s IS NULL OR r.is_real = %(is_real)s)
+    (%(is_real)s::boolean IS NULL OR r.is_real = %(is_real)s::boolean)
 LIMIT %(limit)s OFFSET %(offset)s;
