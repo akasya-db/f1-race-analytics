@@ -176,12 +176,83 @@ html, body {
   border-radius: 18px;
   padding: 32px;
   text-decoration: none;
+  color: var(--f1-white);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all 0.3s ease;
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
 }
+
+.action-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--f1-red), var(--f1-red-dark));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
 .action-card:hover {
-  transform: translateY(-8px);
-  border-color: rgba(255, 30, 21, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.55);
+  border-color: rgba(255, 30, 21, 0.3);
+}
+
+.action-card:hover::before {
+  opacity: 1;
+}
+
+.card-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, rgba(255, 30, 21, 0.15), rgba(194, 15, 9, 0.08));
+  border: 1px solid rgba(255, 30, 21, 0.2);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--f1-red);
+  width: fit-content;
+}
+
+.card-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, rgba(255, 30, 21, 0.2), rgba(194, 15, 9, 0.1));
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--f1-red);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.action-card:hover .card-icon-wrapper {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, rgba(255, 30, 21, 0.3), rgba(194, 15, 9, 0.15));
+}
+
+.action-card h3 {
+  font-family: Montserrat, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--f1-white);
+}
+
+.action-card p {
+  color: var(--f1-grey);
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 /* --- Data Entry Form Styles (Admin-Style) --- */
