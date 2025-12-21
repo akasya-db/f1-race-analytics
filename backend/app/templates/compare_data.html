@@ -10,33 +10,319 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/add_data.css') }}">
   <style>
-    .placeholder-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      text-align: center;
-      padding: 40px;
+    /* Box sizing fix */
+    *, *::before, *::after {
+      box-sizing: border-box;
     }
-    .placeholder-icon {
-      width: 120px;
-      height: 120px;
+
+    /* Circuit Selection Section */
+    .circuit-section {
+      background: linear-gradient(135deg, rgba(255, 30, 21, 0.08) 0%, transparent 50%);
+      border-radius: 16px;
+      padding: 28px;
       margin-bottom: 24px;
-      opacity: 0.6;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .placeholder-title {
+
+    .circuit-section h2 {
       font-family: Montserrat, sans-serif;
-      font-size: 2rem;
+      font-size: 1.4rem;
       font-weight: 800;
-      margin-bottom: 16px;
-      color: var(--f1-white, #f6f8fb);
+      margin: 0 0 16px 0;
+      color: var(--f1-white);
     }
-    .placeholder-text {
+
+    /* Compare Container */
+    .compare-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .compare-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Side Panel */
+    .compare-side {
+      background: linear-gradient(135deg, #0f151c 0%, #1a2128 50%, #0d1116 100%);
+      border-radius: 16px;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .compare-side.left {
+      border-top: 3px solid var(--f1-red);
+    }
+
+    .compare-side.right {
+      border-top: 3px solid var(--f1-yellow, #ffd038);
+    }
+
+    .side-header {
+      font-family: Montserrat, sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin: 0 0 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .side-header .badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .left .side-header .badge {
+      background: rgba(255, 30, 21, 0.2);
+      color: var(--f1-red);
+    }
+
+    .right .side-header .badge {
+      background: rgba(255, 208, 56, 0.2);
+      color: var(--f1-yellow);
+    }
+
+    /* Form Fields */
+    .field-group {
+      margin-bottom: 20px;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease;
+    }
+
+    .field-group.visible {
+      opacity: 1;
+      max-height: 200px;
+      margin-bottom: 20px;
+      overflow: visible;
+    }
+
+    /* Circuit section needs overflow visible always for dropdown */
+    .circuit-section .field-group.visible {
+      overflow: visible;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--f1-grey);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .field-group input,
+    .field-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.3);
+      color: var(--f1-white);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .field-group input:focus,
+    .field-group select:focus {
+      outline: none;
+      border-color: var(--f1-red);
+      box-shadow: 0 0 0 3px rgba(255, 30, 21, 0.2);
+    }
+
+    .field-group input::placeholder {
+      color: rgba(169, 189, 209, 0.5);
+    }
+
+    /* Searchable Dropdown */
+    .searchable-dropdown {
+      position: relative;
+    }
+
+    .searchable-dropdown input {
+      cursor: pointer;
+    }
+
+    .dropdown-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #1a2128;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      margin-top: 4px;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .dropdown-list.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(255, 30, 21, 0.15);
+    }
+
+    .dropdown-item .item-name {
+      font-weight: 600;
+      color: var(--f1-white);
+    }
+
+    .dropdown-item .item-detail {
+      font-size: 0.8rem;
+      color: var(--f1-grey);
+      margin-top: 2px;
+    }
+
+    .dropdown-item.no-results {
+      color: var(--f1-grey);
+      font-style: italic;
+      cursor: default;
+    }
+
+    .dropdown-item.no-results:hover {
+      background: transparent;
+    }
+
+    /* Race Info Banner */
+    .race-info {
+      background: rgba(0, 224, 141, 0.1);
+      border: 1px solid rgba(0, 224, 141, 0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .race-info.visible {
+      display: block;
+    }
+
+    .race-info .race-name {
+      font-weight: 700;
+      color: var(--f1-green);
+    }
+
+    .race-info .race-details {
+      font-size: 0.85rem;
+      color: var(--f1-grey);
+      margin-top: 4px;
+    }
+
+    /* Error Message */
+    .error-message {
+      background: rgba(255, 30, 21, 0.1);
+      border: 1px solid rgba(255, 30, 21, 0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      color: var(--f1-red);
+      display: none;
+    }
+
+    .error-message.visible {
+      display: block;
+    }
+
+    /* Selection Summary */
+    .selection-summary {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .selection-summary.visible {
+      display: block;
+    }
+
+    .selection-summary h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--f1-grey);
+      margin: 0 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      color: var(--f1-grey);
+      font-size: 0.9rem;
+    }
+
+    .summary-value {
+      color: var(--f1-white);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    /* Compare Button */
+    .compare-btn-container {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .compare-btn {
+      background: linear-gradient(180deg, var(--f1-red) 0%, var(--f1-red-dark) 100%);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      border-radius: 12px;
       font-size: 1.1rem;
-      color: var(--f1-grey, #a9bdd1);
-      max-width: 500px;
-      line-height: 1.6;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(255, 30, 21, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .compare-btn.ready {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .compare-btn.ready:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 28px rgba(255, 30, 21, 0.4);
     }
   </style>
 </head>
@@ -46,22 +332,134 @@
   <div class="panel-container">
     <header class="panel-header">
       <h1>Compare Data</h1>
-      <p>Compare your custom data with real F1 statistics</p>
+      <p>Compare driver performances in the same race</p>
     </header>
 
-    <div class="placeholder-content">
-      <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0H5a2 2 0 0 1-2-2v-4m6 6h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <h2 class="placeholder-title">Coming Soon</h2>
-      <p class="placeholder-text">
-        This feature is under development. Soon you'll be able to compare your custom race data, 
-        drivers, and constructors with real Formula 1 statistics.
-      </p>
+    <!-- Circuit Selection (Shared) -->
+    <div class="circuit-section">
+      <h2>1. Select Circuit</h2>
+      <div class="field-group visible">
+        <label for="circuit-select">Circuit</label>
+        <div class="searchable-dropdown">
+          <input type="text" id="circuit-search" placeholder="Search for a circuit..." autocomplete="off">
+          <input type="hidden" id="circuit-select" value="">
+          <div class="dropdown-list" id="circuit-dropdown"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two Sides for Comparison -->
+    <div class="compare-container">
+      <!-- Left Side -->
+      <div class="compare-side left">
+        <h3 class="side-header">
+          <span class="badge">Side A</span>
+          Driver Selection
+        </h3>
+
+        <div class="error-message" id="error-left"></div>
+        <div class="race-info" id="race-info-left">
+          <div class="race-name" id="race-name-left"></div>
+          <div class="race-details" id="race-details-left"></div>
+        </div>
+
+        <div class="field-group" id="year-group-left">
+          <label for="year-left">Year</label>
+          <input type="number" id="year-left" placeholder="e.g. 2023" min="1950" max="2025">
+        </div>
+
+        <div class="field-group" id="constructor-group-left">
+          <label for="constructor-left">Constructor</label>
+          <div class="searchable-dropdown">
+            <input type="text" id="constructor-search-left" placeholder="Search constructor..." autocomplete="off">
+            <input type="hidden" id="constructor-left" value="">
+            <div class="dropdown-list" id="constructor-dropdown-left"></div>
+          </div>
+        </div>
+
+        <div class="field-group" id="driver-group-left">
+          <label for="driver-left">Driver</label>
+          <select id="driver-left">
+            <option value="">Select a driver</option>
+          </select>
+        </div>
+
+        <div class="selection-summary" id="summary-left">
+          <h4>Selection Summary</h4>
+          <div class="summary-item">
+            <span class="summary-label">Year</span>
+            <span class="summary-value" id="summary-year-left">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Constructor</span>
+            <span class="summary-value" id="summary-constructor-left">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Driver</span>
+            <span class="summary-value" id="summary-driver-left">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side -->
+      <div class="compare-side right">
+        <h3 class="side-header">
+          <span class="badge">Side B</span>
+          Driver Selection
+        </h3>
+
+        <div class="error-message" id="error-right"></div>
+        <div class="race-info" id="race-info-right">
+          <div class="race-name" id="race-name-right"></div>
+          <div class="race-details" id="race-details-right"></div>
+        </div>
+
+        <div class="field-group" id="year-group-right">
+          <label for="year-right">Year</label>
+          <input type="number" id="year-right" placeholder="e.g. 2023" min="1950" max="2025">
+        </div>
+
+        <div class="field-group" id="constructor-group-right">
+          <label for="constructor-right">Constructor</label>
+          <div class="searchable-dropdown">
+            <input type="text" id="constructor-search-right" placeholder="Search constructor..." autocomplete="off">
+            <input type="hidden" id="constructor-right" value="">
+            <div class="dropdown-list" id="constructor-dropdown-right"></div>
+          </div>
+        </div>
+
+        <div class="field-group" id="driver-group-right">
+          <label for="driver-right">Driver</label>
+          <select id="driver-right">
+            <option value="">Select a driver</option>
+          </select>
+        </div>
+
+        <div class="selection-summary" id="summary-right">
+          <h4>Selection Summary</h4>
+          <div class="summary-item">
+            <span class="summary-label">Year</span>
+            <span class="summary-value" id="summary-year-right">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Constructor</span>
+            <span class="summary-value" id="summary-constructor-right">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Driver</span>
+            <span class="summary-value" id="summary-driver-right">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare Button -->
+    <div class="compare-btn-container">
+      <button class="compare-btn" id="compare-btn">Compare Drivers</button>
     </div>
   </div>
 
   <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/compare_data.js') }}"></script>
 </body>
 </html>
