@@ -365,7 +365,7 @@ a.card, a.card:visited, a.card:hover, a.card:active {
       max-width:800px;
       width:100%;
       padding:40px;
-      max-height:calc(100vh - 80px);
+      max-height:84vh;
       overflow:auto;
       position:relative;
       border:1px solid rgba(255,30,21,.2);
@@ -1187,3 +1187,72 @@ a.card, a.card:visited, a.card:hover, a.card:active {
     justify-content:flex-start;
   }
 }
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap; /* Allows items to drop to next line */
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.filter-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.radio-options {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
+    color: var(--f1-white);
+}
+
+.radio-options label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.modal-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.modal-stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.modal-stat-card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--f1-grey);
+    letter-spacing: 1px;
+}
+
+.modal-stat-card .value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--f1-red);
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+    margin-top: 20px;
+}
+
+.real-badge { background: rgba(0, 224, 141, 0.2); color: #00e08d; }
+.user-badge { background: rgba(255, 30, 21, 0.2); color: var(--f1-red); }

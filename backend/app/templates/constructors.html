@@ -25,25 +25,36 @@
   </div>
 
   <div class="content-wrapper">
-    <!-- 🔍 FİLTRE BARI -->
+    <!-- FILTER BAR -->
     <form id="constructorFilters" class="filter-bar">
-      <div class="filter-group">
-        <label for="filterName">Team Name</label>
-        <input type="text" id="filterName" placeholder="Search by name"/>
-      </div>
+    <div class="filter-column"> <div class="filter-group">
+            <label for="filterName">Team Name</label>
+            <input type="text" id="filterName" placeholder="Search by name"/>
+        </div>
 
-      <div class="filter-group">
-        <label for="filterNationality">Nationality</label>
-        <select id="filterNationality">
-          <option value="">All</option>
-          <option value="Austria">Austria</option>
-          <option value="Italy">Italy</option>
-          <option value="Germany">Germany</option>
-          <option value="United Kingdom">United Kingdom</option>
-          <option value="France">France</option>
-          <option value="Switzerland">Switzerland</option>
-        </select>
+        <div class="filter-group radio-next-line">
+            <label>Constructor Type</label>
+            <div class="radio-options">
+                <label><input type="radio" name="filterType" value="all" checked> All</label>
+                <label><input type="radio" name="filterType" value="real"> Real</label>
+                <label><input type="radio" name="filterType" value="user"> User Generated</label>
+            </div>
+        </div>
+
+              <div class="filter-group checkbox-group">
+        <label title="Shows teams that have more points than their country's average">
+          <input type="checkbox" id="filterAboveAvg">
+          Above Country Average
+        </label>
       </div>
+    </div>
+
+    <div class="filter-group">
+      <label for="filterNationality">Nationality</label>
+      <select id="filterNationality">
+        <option value="">All</option>
+        </select>
+    </div>
 
       <div class="filter-group">
         <label>Championships</label>
@@ -66,6 +77,17 @@
         <button type="button" id="resetFilters" class="btn btn-secondary">Reset</button>
       </div>
     </form>
+
+    <div class="action-bar" style="margin-bottom: 24px; display: flex; justify-content: flex-end; gap:15px;">
+        <button class="btn secondary" onclick="openTrackStatsModal()">
+            <span style="margin-right: 8px;">📊</span> View Street Track Analysis
+        </button>
+
+        <button class="btn secondary" onclick="openActivityModal()" style="border-color: var(--f1-grey);">
+            <span style="margin-right: 8px;">🔍</span> Participation Audit (Outer Join)
+        </button>
+    </div>
+
     <!-- GRID -->
     <div class="grid" id="constructorsGrid"></div>
     <div id="pagination" class="pagination-container"></div>
@@ -76,12 +98,51 @@
     <div class="modal-content">
       <button class="modal-close" onclick="closeModal()">×</button>
       <div class="modal-header">
-        <div>
+        <div class="modal-info-wrapper">
           <h2 class="modal-title" id="modalTitle"></h2>
           <p class="modal-subtitle" id="modalSubtitle"></p>
         </div>
       </div>
-      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-body" id="modalBody">
+        </div>
+    </div>
+  </div>
+
+  <!-- Track Stats Modal -->
+  <div class="modal" id="trackStatsModal">
+    <div class="modal-content" style="margin: 5vh auto; max-width: 900px;">
+      <button class="modal-close" onclick="closeTrackStatsModal()">×</button>
+      
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Street Track Specialists</h2>
+          <p class="modal-subtitle">Complex Analysis of 5 Linked Tables (Top 10)</p>
+        </div>
+      </div>
+
+      <div class="modal-body" id="trackStatsBody">
+        <div class="stats-body">
+            <div class="loading">Loading analysis data...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Audit Modal -->
+   <div class="modal" id="activityModal" >
+    <div class="modal-content" style="margin: 5vh auto; max-width: 1200px;">
+      <button class="modal-close" onclick="closeActivityModal()">×</button>
+      
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Participation Audit</h2>
+          <p class="modal-subtitle">Teams with 0 races included via LEFT OUTER JOIN</p>
+        </div>
+      </div>
+
+      <div class="modal-body" id="activityBody">
+        <div class="loading">Auditing team history...</div>
+      </div>
     </div>
   </div>
 

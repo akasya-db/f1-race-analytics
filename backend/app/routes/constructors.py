@@ -30,9 +30,22 @@ def get_constructors_data():
     raw_champs = request.args.get('champs_min')
     raw_total_points_min = request.args.get('total_points_min')
     raw_total_points_max = request.args.get('total_points_max')
+    raw_type = request.args.get('type') # 'real' or 'user'
+    is_real_filter = None
+    if raw_type == 'real':
+        is_real_filter = True
+    elif raw_type == 'user':
+        is_real_filter = False
     page = request.args.get('page', 1, type=int)
     per_page = 12
     offset = (page - 1) * per_page
+
+    is_above_avg = request.args.get('above_avg') == 'true'
+
+    if is_above_avg:
+            sql_file = 'constructors_above_avg.sql'
+    else:
+        sql_file = 'select_constructors.sql'
 
     # convert empty strings to None
     filters = {
@@ -41,6 +54,7 @@ def get_constructors_data():
         'champs_min': int(raw_champs) if raw_champs else None,
         'total_points_min': int(raw_total_points_min) if raw_total_points_min else None,
         'total_points_max': int(raw_total_points_max) if raw_total_points_max else None,
+        'is_real': is_real_filter,
         'limit': per_page,
         'offset': offset
     }
@@ -52,7 +66,7 @@ def get_constructors_data():
     db = DatabaseConnection()
     try:
         # load the sql from the file
-        sql_query = get_sql_query('select_constructors.sql')
+        sql_query = get_sql_query(sql_file)
         db.execute(sql_query, filters)
         results = db.fetchall()
 
@@ -74,6 +88,26 @@ def get_constructors_data():
         print(f"Error fetching constructors: {e}")
         return jsonify({'error': 'Internal Server Error'}), 500
 
+    finally:
+        db.close()
+
+@constructors_bp.route("/api/constructor-countries")
+def get_constructor_countries():
+    db = DatabaseConnection()
+    try:
+        # Fetch unique countries that have at least one constructor
+        query = """
+            SELECT DISTINCT co.name 
+            FROM country co
+            JOIN constructor c ON co.id = c.country_id
+            ORDER BY co.name ASC
+        """
+        db.execute(query)
+        countries = [row['name'] for row in db.fetchall()]
+        return jsonify(countries)
+    except Exception as e:
+        print(f"Error fetching countries: {e}")
+        return jsonify([]), 500
     finally:
         db.close()
 
@@ -227,8 +261,6 @@ def add_constructor_page():
     finally:
         db.close()
 
-# app/routes/constructors.py
-
 @constructors_bp.route("/constructors/edit/<constructor_id>")
 def edit_constructor_page(constructor_id):
     authenticated = 'username' in session
@@ -314,7 +346,6 @@ def update_constructor(constructor_id):
     finally:
         db.close()
 
-# app/routes/constructors.py
 @constructors_bp.route("/api/delete-constructor/<constructor_id>", methods=["POST"])
 def delete_constructor(constructor_id):
     if 'user_id' not in session:
@@ -324,7 +355,7 @@ def delete_constructor(constructor_id):
     try:
         user_id = session.get('user_id')
         
-        # WHERE clause içinde hem ID hem de user_id zorunlu
+        # Only allow deletion of user-created constructors
         query = "DELETE FROM constructor WHERE id = %s AND user_id = %s AND id LIKE 'uc-%%'"
         db.execute(query, (constructor_id, user_id))
         
@@ -335,5 +366,39 @@ def delete_constructor(constructor_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@constructors_bp.route("/api/stats/track-performance")
+def get_track_performance_stats():
+    db = DatabaseConnection()
+    try:
+        sql_query = get_sql_query('constructor_track_performance.sql')
+        db.execute(sql_query) 
+        results = db.fetchall()
+        
+        return jsonify([dict(row) for row in results])
+    
+    except Exception as e:
+        print(f"Error fetching track stats: {e}")
+        return jsonify({'error': 'Internal Server Error'}), 500
+    finally:
+        db.close()
+
+
+@constructors_bp.route("/api/stats/activity-audit")
+def get_activity_audit_stats():
+    db = DatabaseConnection()
+    try:
+        sql_query = get_sql_query('constructor_activity_audit.sql')
+        db.execute(sql_query)
+        results = db.fetchall()
+        
+        return jsonify([dict(row) for row in results])
+    
+    except Exception as e:
+        print(f"Error fetching activity audit: {e}")
+        return jsonify({'error': str(e)}), 500
     finally:
         db.close()

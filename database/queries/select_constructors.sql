@@ -9,6 +9,7 @@ SELECT
     c.total_podiums,
     c.total_points,
     c.total_pole_positions,
+    c.is_real,
     COUNT(*) OVER() as full_count
 FROM
     constructor c
@@ -24,4 +25,6 @@ WHERE
     (%(total_points_min)s IS NULL OR c.total_points >= %(total_points_min)s)
     AND
     (%(total_points_max)s IS NULL OR c.total_points <= %(total_points_max)s)
+    AND
+    (%(is_real)s IS NULL OR c.is_real = %(is_real)s)
 LIMIT %(limit)s OFFSET %(offset)s;
