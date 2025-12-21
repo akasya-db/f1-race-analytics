@@ -1266,3 +1266,26 @@ a.card, a.card:visited, a.card:hover, a.card:active {
 
 .real-badge { background: rgba(0, 224, 141, 0.2); color: #00e08d; }
 .user-badge { background: rgba(255, 30, 21, 0.2); color: var(--f1-red); }
+
+.top-n-btn {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: transparent;
+  color: var(--f1-grey);
+  font-family: Montserrat;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.top-n-btn:hover {
+  border-color: var(--f1-red);
+  color: var(--f1-white);
+}
+
+.top-n-btn.active {
+  background: linear-gradient(180deg,#ff5149,var(--f1-red));
+  border-color: var(--f1-red);
+  color: white;
+}

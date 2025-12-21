@@ -113,9 +113,11 @@ CREATE TABLE driver (
     total_points                    DECIMAL(8,2) NOT NULL,
     total_pole_positions            INT          NOT NULL,
     is_real                         BOOLEAN      DEFAULT TRUE,
+    user_id                         VARCHAR(100)  DEFAULT NULL,
 
     FOREIGN KEY (country_of_birth_country_id) REFERENCES country(id),
-    FOREIGN KEY (nationality_country_id)      REFERENCES country(id)
+    FOREIGN KEY (nationality_country_id)      REFERENCES country(id),
+    FOREIGN KEY (user_id)    REFERENCES "user"(id)
 );
 
 CREATE INDEX driver_name_idx ON driver(full_name);

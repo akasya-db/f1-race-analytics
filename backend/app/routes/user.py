@@ -13,6 +13,12 @@ def data_panel():
             'description': 'Manage your custom racing teams and performance stats.',
             'svg_path': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>'
         },
+        'drivers': {
+            'name': 'Drivers',
+            'route': 'user.user_drivers_list',
+            'description': 'Create and manage your custom drivers.',
+            'svg_path': '<circle cx="12" cy="7" r="4"></circle><path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path>'
+        },
         'races': {
             'name': 'Races',
             'route': 'user.user_races_list', 
@@ -59,6 +65,43 @@ def user_constructors_list():
                            records=records, 
                            schema=schema, 
                            title="My Constructors")
+
+
+@user_bp.route('/my-drivers')
+def user_drivers_list():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+
+    db = DatabaseConnection()
+    records = []
+    schema = []
+
+    try:
+        user_id = session.get('user_id')
+        query = """
+            SELECT *
+            FROM driver
+            WHERE id LIKE 'ud-%%'
+              AND user_id = %s
+            ORDER BY full_name ASC
+        """
+        db.execute(query, (user_id,))
+        records = db.fetchall()
+
+        if db.cursor.description:
+            schema = [desc[0] for desc in db.cursor.description]
+
+    except Exception as e:
+        print(f"DEBUG ERROR (drivers): {e}")
+    finally:
+        db.close()
+
+    return render_template(
+        'user_table_list.html',
+        records=records,
+        schema=schema,
+        title="My Drivers"
+    )
 
 
 @user_bp.route('/my-races')

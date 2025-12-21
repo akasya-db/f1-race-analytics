@@ -25,15 +25,23 @@
           <a href="{{ url_for('constructors.add_constructor_page') }}" class="btn-panel btn-panel-primary">
             + Add New Constructor
           </a>
+
         {% elif title == "My Races" %}
           <a href="{{ url_for('races.add_race_form_page') }}" class="btn-panel btn-panel-primary">
             + Add New Race
           </a>
+
         {% elif title == "My Race Data" %}
           <a href="{{ url_for('races.add_race_data_form_page') }}" class="btn-panel btn-panel-primary">
             + Add New Race Data
           </a>
+
+        {% elif title == "My Drivers" %}
+          <a href="{{ url_for('drivers.add_driver_form_page') }}" class="btn-panel btn-panel-primary">
+            + Add New Driver
+          </a>
         {% endif %}
+
       </div>
     </div>
 
@@ -128,6 +136,16 @@
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                   </a>
+                  {% elif title == "My Drivers" %}
+                  <a href="{{ url_for('drivers.edit_driver_form_page', driver_id=record['id']) }}"
+                    class="btn-icon btn-edit" title="Edit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14 a2 2 0 0 0 2 2h14 a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3 L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </a>
+
                 {% endif %}
                 <button class="btn-icon btn-delete delete-trigger" title="Delete" data-id="{{ record.id }}" data-name="{{ record.official_name if title == 'My Races' else record.name }}" data-type="{{ 'race' if title == 'My Races' else 'constructor' }}">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

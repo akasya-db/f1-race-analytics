@@ -80,13 +80,28 @@
         </div>
       </div>
 
-      <!-- Real only -->
-      <div class="filter-group checkbox-group">
-        <label>
-          <input type="checkbox" id="filterIsReal"/>
-          Only real drivers
-        </label>
+      <!-- Driver Type -->
+      <div class="radio-group">
+        <span class="filter-label">Driver Type</span>
+
+        <div class="radio-options">
+          <label>
+            <input type="radio" name="driverType" value="all" checked>
+            ALL
+          </label>
+
+          <label>
+            <input type="radio" name="driverType" value="real">
+            REAL
+          </label>
+
+          <label>
+            <input type="radio" name="driverType" value="user">
+            USER-GENERATED
+          </label>
+        </div>
       </div>
+
 
       <div class="filter-actions">
         <button type="submit" class="btn">Apply</button>
@@ -94,6 +109,67 @@
       </div>
     </form>
   </div>
+      
+<!-- LEADERBOARD TOGGLE -->
+<div class="content-wrapper">
+  <div class="stats-card">
+    <div class="stats-header">
+      <h3>Driver Leaderboard</h3>
+      <button class="btn secondary" id="toggleLeaderboard">
+        Show Leaderboard
+      </button>
+    </div>
+
+    <div class="stats-body" id="leaderboardSection" style="display:none;">
+      
+      <!-- Year filter -->
+      <div class="filter-bar" style="margin:20px;">
+        <div class="filter-group">
+          <label>From Year</label>
+          <input type="number" id="leaderboardYearFrom" placeholder="e.g. 2015">
+        </div>
+
+        <div class="filter-group">
+          <label>To Year</label>
+          <input type="number" id="leaderboardYearTo" placeholder="e.g. 2023">
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn" id="loadLeaderboard">Generate</button>
+        </div>
+      </div>
+      <!-- TOP N BUTTONS -->
+      <div class="filter-group" style="margin-left:20px;">
+        <label>Show</label>
+        <div class="radio-options">
+          <button type="button" class="top-n-btn active" data-limit="10">Top 10</button>
+          <button type="button" class="top-n-btn" data-limit="25">Top 25</button>
+          <button type="button" class="top-n-btn" data-limit="50">Top 50</button>
+        </div>
+      </div>
+
+
+      <!-- Table -->
+      <div class="results-wrapper">
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Driver</th>
+              <th>Championship Wins</th>
+              <th>Race Wins</th>
+              <th>Total Points</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardTable">
+            <tr><td colspan="5">Select a year range</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
 
   <!-- GRID -->
   <div class="content-wrapper">
@@ -107,12 +183,12 @@
       <button class="modal-close" onclick="closeDriverModal()">×</button>
 
       <div class="modal-header">
-        <img class="modal-logo" id="driverModalPhoto" src="/placeholder.svg" alt="Driver Photo"/>
         <div>
           <h2 class="modal-title" id="driverModalTitle"></h2>
           <p class="modal-subtitle" id="driverModalSubtitle"></p>
         </div>
       </div>
+
 
       <div class="modal-body" id="driverModalBody"></div>
     </div>

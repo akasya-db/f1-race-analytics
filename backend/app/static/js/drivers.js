@@ -1,5 +1,7 @@
 let currentDrivers = [];
 let currentPage = 1;
+let currentTopLimit = 10;
+
 
 async function fetchDrivers(page = 1) {
     currentPage = page;
@@ -18,7 +20,8 @@ async function fetchDrivers(page = 1) {
     const podiumsMin = read("filterPodiumsMin");
     const pointsMin = read("filterPointsMin");
     const polesMin = read("filterPolesMin");
-    const isReal = document.getElementById("filterIsReal")?.checked;
+    const driverType = document.querySelector('input[name="driverType"]:checked')?.value;
+
 
     if (name) params.append("name", name);
     if (nationality) params.append("nationality", nationality);
@@ -29,7 +32,9 @@ async function fetchDrivers(page = 1) {
     if (polesMin) params.append("poles_min", polesMin);
     if (birthFrom) params.append("birth_from", birthFrom);
     if (birthTo) params.append("birth_to", birthTo);
-    if (isReal) params.append("is_real", "true");
+    if (driverType === "real") params.append("is_real", "true");
+    if (driverType === "user") params.append("is_real", "false");
+
 
     try {
         const res = await fetch(`/api/drivers?${params.toString()}`);
@@ -50,6 +55,7 @@ async function fetchDrivers(page = 1) {
 
 function renderDrivers(list) {
     const grid = document.getElementById("driversGrid");
+
     if (!list.length) {
         grid.innerHTML = `<p class="empty-state">No drivers found.</p>`;
         return;
@@ -57,20 +63,32 @@ function renderDrivers(list) {
 
     grid.innerHTML = list.map(d => `
         <div class="card" onclick="openDriverModal('${d.id}')">
-            <div class="logo-wrapper">
-                <img class="logo" src="/static/img/driver_placeholder.png" alt="${d.full_name}" />
-            </div>
             <div class="team-info">
                 <div class="name">${d.full_name}</div>
-                <div class="nation">${d.nationality} • Born: ${d.date_of_birth}</div>
+                <div class="nation">
+                    ${d.nationality} • Born: ${d.date_of_birth || "-"}
+                </div>
 
                 <div class="stats">
-                    <div class="stat-item"><span class="stat-label">Wins</span><span class="stat-value">${d.total_race_wins}</span></div>
-                    <div class="stat-item"><span class="stat-label">Podiums</span><span class="stat-value">${d.total_podiums}</span></div>
-                    <div class="stat-item"><span class="stat-label">Points</span><span class="stat-value">${d.total_points}</span></div>
-                    <div class="stat-item"><span class="stat-label">Poles</span><span class="stat-value">${d.total_pole_positions}</span></div>
+                    <div class="stat-item">
+                        <span class="stat-label">Wins</span>
+                        <span class="stat-value">${d.total_race_wins}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Podiums</span>
+                        <span class="stat-value">${d.total_podiums}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Points</span>
+                        <span class="stat-value">${d.total_points}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Poles</span>
+                        <span class="stat-value">${d.total_pole_positions}</span>
+                    </div>
                 </div>
             </div>
+
             <button class="btn">View Driver</button>
         </div>
     `).join("");
@@ -88,7 +106,6 @@ function renderPagination(p) {
 
     let html = "";
 
-    // Navigation buttons
     const prevDisabled = current_page === 1 ? "disabled" : "";
     const nextDisabled = current_page === total_pages ? "disabled" : "";
 
@@ -97,12 +114,9 @@ function renderPagination(p) {
         <button class="page-btn nav-btn" onclick="fetchDrivers(${current_page - 1})" ${prevDisabled}>&lsaquo;</button>
     `;
 
-    // Max 7 visible page buttons
-    const maxButtons = 7;
     let start = Math.max(1, current_page - 3);
     let end = Math.min(total_pages, current_page + 3);
 
-    // Adjust boundaries if near edges
     if (current_page <= 4) {
         start = 1;
         end = Math.min(7, total_pages);
@@ -112,12 +126,10 @@ function renderPagination(p) {
         start = Math.max(1, total_pages - 6);
     }
 
-    // Show "..." before
     if (start > 1) {
         html += `<button class="page-btn dots">...</button>`;
     }
 
-    // Page buttons
     for (let i = start; i <= end; i++) {
         html += `
             <button class="page-btn ${i === current_page ? "active" : ""}"
@@ -125,7 +137,6 @@ function renderPagination(p) {
         `;
     }
 
-    // Show "..." after
     if (end < total_pages) {
         html += `<button class="page-btn dots">...</button>`;
     }
@@ -138,9 +149,9 @@ function renderPagination(p) {
     container.innerHTML = html;
 }
 
-
 function setupDriverFilters() {
     const form = document.getElementById("driverFilters");
+
     form.addEventListener("submit", e => {
         e.preventDefault();
         fetchDrivers(1);
@@ -158,12 +169,12 @@ function openDriverModal(id) {
 
     document.getElementById("driverModalTitle").textContent = d.full_name;
     document.getElementById("driverModalSubtitle").textContent =
-        `${d.nationality} • Born in ${d.place_of_birth}`;
+        `${d.nationality} • Born in ${d.place_of_birth || "-"}`;
 
     document.getElementById("driverModalBody").innerHTML = `
         <div><strong>Date of Birth:</strong> ${d.date_of_birth}</div>
         ${d.date_of_death ? `<div><strong>Date of Death:</strong> ${d.date_of_death}</div>` : ""}
-        <div><strong>Birthplace:</strong> ${d.place_of_birth}</div>
+        <div><strong>Birthplace:</strong> ${d.place_of_birth || "-"}</div>
         <hr>
         <div><strong>Total Wins:</strong> ${d.total_race_wins}</div>
         <div><strong>Total Podiums:</strong> ${d.total_podiums}</div>
@@ -181,4 +192,60 @@ function closeDriverModal() {
 document.addEventListener("DOMContentLoaded", () => {
     setupDriverFilters();
     fetchDrivers();
+
+    document.querySelectorAll(".top-n-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".top-n-btn")
+                .forEach(b => b.classList.remove("active"));
+
+            btn.classList.add("active");
+            currentTopLimit = btn.dataset.limit;
+        });
+    });
+});
+
+
+// ---------------- LEADERBOARD ----------------
+
+document.getElementById("toggleLeaderboard").addEventListener("click", () => {
+    const section = document.getElementById("leaderboardSection");
+    section.style.display = section.style.display === "none" ? "block" : "none";
+});
+
+document.getElementById("loadLeaderboard").addEventListener("click", async () => {
+    const from = document.getElementById("leaderboardYearFrom").value;
+    const to = document.getElementById("leaderboardYearTo").value;
+
+    const tbody = document.getElementById("leaderboardTable");
+    tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
+
+    const params = new URLSearchParams();
+    if (from) params.append("year_from", from);
+    if (to) params.append("year_to", to);
+    params.append("limit", currentTopLimit);
+
+
+    try {
+        const res = await fetch(`/api/driver-leaderboard?${params.toString()}`);
+        const data = await res.json();
+
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="5">No data found</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map((d, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${d.full_name}</td>
+              <td>${d.championship_wins}</td>
+              <td>${d.race_wins}</td>
+              <td>${d.total_points}</td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="5">Error loading leaderboard</td></tr>`;
+    }
 });
