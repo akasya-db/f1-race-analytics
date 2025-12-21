@@ -5,91 +5,103 @@
 -- for specific races (identified by race_id).
 --
 -- Features:
--- - 6 table JOINs (race, race_data, driver, constructor, circuit, country)
+-- - 7 table JOINs (race, race_data, driver, constructor, circuit, country, race_driver_standing)
+-- - Window functions (RANK) to calculate actual finish positions
 -- - Nested subqueries for historical statistics
--- - GROUP BY with aggregate functions
+-- - GROUP BY with aggregate functions (COUNT, AVG, SUM, MIN)
 -- - LEFT JOINs for championship standings
 -- - CTEs (Common Table Expressions) for readability
 --
--- Parameters (17 total, using positional placeholders for psycopg2):
---   driver_1_id (VARCHAR) - appears multiple times
---   race_1_id (INT) - the specific race for driver 1
---   driver_2_id (VARCHAR) - appears multiple times
---   race_2_id (INT) - the specific race for driver 2
---   circuit_id (VARCHAR) - the circuit being compared
+-- Parameters (21 total, in order of appearance):
+-- 1: race_1_id, 2: driver_1_id
+-- 3: race_2_id, 4: driver_2_id
+-- 5: driver_1_id, 6: circuit_id
+-- 7: driver_2_id, 8: circuit_id
+-- 9-14: driver_1_id (x3), race_1_id (x3) for season stats
+-- 15-20: driver_2_id (x3), race_2_id (x3) for season stats
+-- 21: circuit_id
 -- ============================================
 
 WITH 
 -- ===========================================
--- CTE 1: Driver 1's performance in the specific race
+-- CTE 1: All drivers' positions in race 1
+-- Uses RANK() window function to get actual finish position
+-- ===========================================
+race_1_all_positions AS (
+    SELECT 
+        rd.driver_id,
+        rd.race_id,
+        rd.constructor_id,
+        rd.race_points,
+        rd.race_pole_position,
+        rd.race_qualification_position_number AS quali_position,
+        rd.race_grid_position_number AS grid_position,
+        r.year AS race_year,
+        r.official_name AS race_name,
+        c.name AS constructor_name,
+        -- Use RANK to get actual position within this race
+        RANK() OVER (ORDER BY rd.position_display_order ASC) AS finish_position
+    FROM race_data rd
+    INNER JOIN race r ON rd.race_id = r.id
+    INNER JOIN constructor c ON rd.constructor_id = c.id
+    WHERE rd.race_id = %s
+),
+
+-- ===========================================
+-- CTE 2: Driver 1's performance filtered from race 1
 -- ===========================================
 driver_1_race_performance AS (
+    SELECT * FROM race_1_all_positions
+    WHERE driver_id = %s
+),
+
+-- ===========================================
+-- CTE 3: All drivers' positions in race 2
+-- ===========================================
+race_2_all_positions AS (
     SELECT 
         rd.driver_id,
         rd.race_id,
         rd.constructor_id,
-        rd.position_display_order AS finish_position,
         rd.race_points,
         rd.race_pole_position,
         rd.race_qualification_position_number AS quali_position,
         rd.race_grid_position_number AS grid_position,
         r.year AS race_year,
         r.official_name AS race_name,
-        r.laps AS total_laps,
         c.name AS constructor_name,
-        c.full_name AS constructor_full_name
+        RANK() OVER (ORDER BY rd.position_display_order ASC) AS finish_position
     FROM race_data rd
     INNER JOIN race r ON rd.race_id = r.id
     INNER JOIN constructor c ON rd.constructor_id = c.id
-    WHERE rd.driver_id = %s 
-      AND rd.race_id = %s
+    WHERE rd.race_id = %s
 ),
 
 -- ===========================================
--- CTE 2: Driver 2's performance in the specific race
+-- CTE 4: Driver 2's performance filtered from race 2
 -- ===========================================
 driver_2_race_performance AS (
-    SELECT 
-        rd.driver_id,
-        rd.race_id,
-        rd.constructor_id,
-        rd.position_display_order AS finish_position,
-        rd.race_points,
-        rd.race_pole_position,
-        rd.race_qualification_position_number AS quali_position,
-        rd.race_grid_position_number AS grid_position,
-        r.year AS race_year,
-        r.official_name AS race_name,
-        r.laps AS total_laps,
-        c.name AS constructor_name,
-        c.full_name AS constructor_full_name
-    FROM race_data rd
-    INNER JOIN race r ON rd.race_id = r.id
-    INNER JOIN constructor c ON rd.constructor_id = c.id
-    WHERE rd.driver_id = %s 
-      AND rd.race_id = %s
+    SELECT * FROM race_2_all_positions
+    WHERE driver_id = %s
 ),
 
 -- ===========================================
--- CTE 3: Driver 1's historical stats at this circuit
--- (Nested subquery with GROUP BY)
+-- CTE 5: Driver 1's historical stats at this circuit
+-- Uses GROUP BY with multiple aggregate functions
+-- Joins: race_data -> race (2 tables)
 -- ===========================================
 driver_1_circuit_history AS (
     SELECT 
         rd.driver_id,
         COUNT(DISTINCT rd.race_id) AS total_races_at_circuit,
-        AVG(rd.position_display_order) AS avg_finish_position,
-        MIN(rd.position_display_order) AS best_finish,
-        MAX(rd.position_display_order) AS worst_finish,
-        SUM(rd.race_points) AS total_points_at_circuit,
-        AVG(rd.race_points) AS avg_points_per_race,
+        -- For historical stats, position 1 means winner based on position_display_order
         COUNT(CASE WHEN rd.position_display_order = 1 THEN 1 END) AS wins_at_circuit,
         COUNT(CASE WHEN rd.position_display_order <= 3 THEN 1 END) AS podiums_at_circuit,
         COUNT(CASE WHEN rd.race_pole_position = TRUE THEN 1 END) AS poles_at_circuit,
-        AVG(rd.race_qualification_position_number) AS avg_quali_position,
-        MIN(rd.race_qualification_position_number) AS best_quali,
-        -- Positions gained/lost from grid to finish (negative = positions gained)
-        AVG(rd.position_display_order - rd.race_grid_position_number) AS avg_positions_delta
+        ROUND(AVG(rd.position_display_order)::numeric, 1) AS avg_finish_position,
+        MIN(rd.position_display_order) AS best_finish,
+        SUM(COALESCE(rd.race_points, 0)) AS total_points_at_circuit,
+        ROUND(AVG(COALESCE(rd.race_points, 0))::numeric, 1) AS avg_points_per_race
     FROM race_data rd
     INNER JOIN race r ON rd.race_id = r.id
     WHERE rd.driver_id = %s 
@@ -98,23 +110,19 @@ driver_1_circuit_history AS (
 ),
 
 -- ===========================================
--- CTE 4: Driver 2's historical stats at this circuit
+-- CTE 6: Driver 2's historical stats at this circuit
 -- ===========================================
 driver_2_circuit_history AS (
     SELECT 
         rd.driver_id,
         COUNT(DISTINCT rd.race_id) AS total_races_at_circuit,
-        AVG(rd.position_display_order) AS avg_finish_position,
-        MIN(rd.position_display_order) AS best_finish,
-        MAX(rd.position_display_order) AS worst_finish,
-        SUM(rd.race_points) AS total_points_at_circuit,
-        AVG(rd.race_points) AS avg_points_per_race,
         COUNT(CASE WHEN rd.position_display_order = 1 THEN 1 END) AS wins_at_circuit,
         COUNT(CASE WHEN rd.position_display_order <= 3 THEN 1 END) AS podiums_at_circuit,
         COUNT(CASE WHEN rd.race_pole_position = TRUE THEN 1 END) AS poles_at_circuit,
-        AVG(rd.race_qualification_position_number) AS avg_quali_position,
-        MIN(rd.race_qualification_position_number) AS best_quali,
-        AVG(rd.position_display_order - rd.race_grid_position_number) AS avg_positions_delta
+        ROUND(AVG(rd.position_display_order)::numeric, 1) AS avg_finish_position,
+        MIN(rd.position_display_order) AS best_finish,
+        SUM(COALESCE(rd.race_points, 0)) AS total_points_at_circuit,
+        ROUND(AVG(COALESCE(rd.race_points, 0))::numeric, 1) AS avg_points_per_race
     FROM race_data rd
     INNER JOIN race r ON rd.race_id = r.id
     WHERE rd.driver_id = %s 
@@ -123,65 +131,70 @@ driver_2_circuit_history AS (
 ),
 
 -- ===========================================
--- CTE 5: Driver 1's season stats (year of their race)
--- Uses nested subquery to get the year first
+-- CTE 7: Driver 1's season stats
+-- Complex nested subqueries for wins/podiums count
+-- Joins: race_driver_standing -> race (for championship position)
 -- ===========================================
 driver_1_season_stats AS (
     SELECT 
-        rd.driver_id,
-        r.year,
-        COUNT(DISTINCT rd.race_id) AS races_in_season,
-        SUM(rd.race_points) AS season_points,
-        AVG(rd.position_display_order) AS season_avg_finish,
-        COUNT(CASE WHEN rd.position_display_order = 1 THEN 1 END) AS season_wins,
-        COUNT(CASE WHEN rd.position_display_order <= 3 THEN 1 END) AS season_podiums,
-        -- Championship position at end of season (subquery)
+        rds.driver_id,
+        rds.position_number AS championship_position,
+        rds.points AS season_points,
+        -- Nested subquery: count wins in the season
         (
-            SELECT rds.position_number 
-            FROM race_driver_standing rds
-            INNER JOIN race r2 ON rds.race_id = r2.id
-            WHERE rds.driver_id = %s 
-              AND r2.year = r.year
-            ORDER BY r2.round DESC
-            LIMIT 1
-        ) AS championship_position
-    FROM race_data rd
-    INNER JOIN race r ON rd.race_id = r.id
-    WHERE rd.driver_id = %s
-      AND r.year = (SELECT year FROM race WHERE id = %s)
-    GROUP BY rd.driver_id, r.year
+            SELECT COUNT(*) 
+            FROM race_data rd2 
+            INNER JOIN race r2 ON rd2.race_id = r2.id
+            WHERE rd2.driver_id = %s
+              AND rd2.position_display_order = 1
+              AND r2.year = (SELECT year FROM race WHERE id = %s)
+        ) AS season_wins,
+        -- Nested subquery: count podiums in the season
+        (
+            SELECT COUNT(*) 
+            FROM race_data rd3 
+            INNER JOIN race r3 ON rd3.race_id = r3.id
+            WHERE rd3.driver_id = %s
+              AND rd3.position_display_order <= 3
+              AND r3.year = (SELECT year FROM race WHERE id = %s)
+        ) AS season_podiums
+    FROM race_driver_standing rds
+    WHERE rds.driver_id = %s
+      AND rds.race_id = %s
 ),
 
 -- ===========================================
--- CTE 6: Driver 2's season stats
+-- CTE 8: Driver 2's season stats
 -- ===========================================
 driver_2_season_stats AS (
     SELECT 
-        rd.driver_id,
-        r.year,
-        COUNT(DISTINCT rd.race_id) AS races_in_season,
-        SUM(rd.race_points) AS season_points,
-        AVG(rd.position_display_order) AS season_avg_finish,
-        COUNT(CASE WHEN rd.position_display_order = 1 THEN 1 END) AS season_wins,
-        COUNT(CASE WHEN rd.position_display_order <= 3 THEN 1 END) AS season_podiums,
+        rds.driver_id,
+        rds.position_number AS championship_position,
+        rds.points AS season_points,
         (
-            SELECT rds.position_number 
-            FROM race_driver_standing rds
-            INNER JOIN race r2 ON rds.race_id = r2.id
-            WHERE rds.driver_id = %s 
-              AND r2.year = r.year
-            ORDER BY r2.round DESC
-            LIMIT 1
-        ) AS championship_position
-    FROM race_data rd
-    INNER JOIN race r ON rd.race_id = r.id
-    WHERE rd.driver_id = %s
-      AND r.year = (SELECT year FROM race WHERE id = %s)
-    GROUP BY rd.driver_id, r.year
+            SELECT COUNT(*) 
+            FROM race_data rd2 
+            INNER JOIN race r2 ON rd2.race_id = r2.id
+            WHERE rd2.driver_id = %s
+              AND rd2.position_display_order = 1
+              AND r2.year = (SELECT year FROM race WHERE id = %s)
+        ) AS season_wins,
+        (
+            SELECT COUNT(*) 
+            FROM race_data rd3 
+            INNER JOIN race r3 ON rd3.race_id = r3.id
+            WHERE rd3.driver_id = %s
+              AND rd3.position_display_order <= 3
+              AND r3.year = (SELECT year FROM race WHERE id = %s)
+        ) AS season_podiums
+    FROM race_driver_standing rds
+    WHERE rds.driver_id = %s
+      AND rds.race_id = %s
 ),
 
 -- ===========================================
--- CTE 7: Circuit information
+-- CTE 9: Circuit information
+-- Joins: circuit -> country (2 tables)
 -- ===========================================
 circuit_info AS (
     SELECT 
@@ -200,7 +213,11 @@ circuit_info AS (
 )
 
 -- ===========================================
--- MAIN QUERY: Combine all CTEs into final comparison
+-- MAIN QUERY: Combine all CTEs
+-- Uses CROSS JOIN to combine single-row CTEs
+-- Uses LEFT JOINs for optional data (history, season stats)
+-- Total tables involved: race_data, race, driver, constructor, 
+--                        circuit, country, race_driver_standing (7 tables)
 -- ===========================================
 SELECT 
     -- Circuit Information
@@ -213,14 +230,14 @@ SELECT
     cinfo.circuit_direction,
     cinfo.total_races_held AS circuit_total_races,
 
-    -- Driver 1 Info
+    -- Driver 1 Info (from driver table join)
     d1.id AS driver_1_id,
     d1.full_name AS driver_1_name,
     d1.abbreviation AS driver_1_abbr,
     nat1.name AS driver_1_nationality,
     d1.permanent_number AS driver_1_number,
     
-    -- Driver 1 Race Performance
+    -- Driver 1 Race Performance (with calculated finish position)
     d1rp.race_year AS driver_1_race_year,
     d1rp.race_name AS driver_1_race_name,
     d1rp.constructor_name AS driver_1_constructor,
@@ -229,25 +246,20 @@ SELECT
     d1rp.grid_position AS driver_1_grid_position,
     d1rp.race_points AS driver_1_race_points,
     d1rp.race_pole_position AS driver_1_had_pole,
-    (d1rp.grid_position - d1rp.finish_position) AS driver_1_positions_gained,
+    (COALESCE(d1rp.grid_position, 0) - d1rp.finish_position) AS driver_1_positions_gained,
     
-    -- Driver 1 Circuit History
+    -- Driver 1 Circuit History (aggregated stats)
     COALESCE(d1ch.total_races_at_circuit, 0) AS driver_1_circuit_races,
-    ROUND(COALESCE(d1ch.avg_finish_position, 0)::numeric, 2) AS driver_1_circuit_avg_finish,
+    COALESCE(d1ch.avg_finish_position, 0) AS driver_1_circuit_avg_finish,
     COALESCE(d1ch.best_finish, 0) AS driver_1_circuit_best_finish,
-    COALESCE(d1ch.worst_finish, 0) AS driver_1_circuit_worst_finish,
     COALESCE(d1ch.total_points_at_circuit, 0) AS driver_1_circuit_total_points,
-    ROUND(COALESCE(d1ch.avg_points_per_race, 0)::numeric, 2) AS driver_1_circuit_avg_points,
+    COALESCE(d1ch.avg_points_per_race, 0) AS driver_1_circuit_avg_points,
     COALESCE(d1ch.wins_at_circuit, 0) AS driver_1_circuit_wins,
     COALESCE(d1ch.podiums_at_circuit, 0) AS driver_1_circuit_podiums,
     COALESCE(d1ch.poles_at_circuit, 0) AS driver_1_circuit_poles,
-    ROUND(COALESCE(d1ch.avg_quali_position, 0)::numeric, 2) AS driver_1_circuit_avg_quali,
-    COALESCE(d1ch.best_quali, 0) AS driver_1_circuit_best_quali,
-    ROUND(COALESCE(d1ch.avg_positions_delta, 0)::numeric, 2) AS driver_1_circuit_avg_pos_delta,
     
     -- Driver 1 Season Stats
     COALESCE(d1ss.season_points, 0) AS driver_1_season_points,
-    ROUND(COALESCE(d1ss.season_avg_finish, 0)::numeric, 2) AS driver_1_season_avg_finish,
     COALESCE(d1ss.season_wins, 0) AS driver_1_season_wins,
     COALESCE(d1ss.season_podiums, 0) AS driver_1_season_podiums,
     d1ss.championship_position AS driver_1_championship_pos,
@@ -268,43 +280,40 @@ SELECT
     d2rp.grid_position AS driver_2_grid_position,
     d2rp.race_points AS driver_2_race_points,
     d2rp.race_pole_position AS driver_2_had_pole,
-    (d2rp.grid_position - d2rp.finish_position) AS driver_2_positions_gained,
+    (COALESCE(d2rp.grid_position, 0) - d2rp.finish_position) AS driver_2_positions_gained,
     
     -- Driver 2 Circuit History
     COALESCE(d2ch.total_races_at_circuit, 0) AS driver_2_circuit_races,
-    ROUND(COALESCE(d2ch.avg_finish_position, 0)::numeric, 2) AS driver_2_circuit_avg_finish,
+    COALESCE(d2ch.avg_finish_position, 0) AS driver_2_circuit_avg_finish,
     COALESCE(d2ch.best_finish, 0) AS driver_2_circuit_best_finish,
-    COALESCE(d2ch.worst_finish, 0) AS driver_2_circuit_worst_finish,
     COALESCE(d2ch.total_points_at_circuit, 0) AS driver_2_circuit_total_points,
-    ROUND(COALESCE(d2ch.avg_points_per_race, 0)::numeric, 2) AS driver_2_circuit_avg_points,
+    COALESCE(d2ch.avg_points_per_race, 0) AS driver_2_circuit_avg_points,
     COALESCE(d2ch.wins_at_circuit, 0) AS driver_2_circuit_wins,
     COALESCE(d2ch.podiums_at_circuit, 0) AS driver_2_circuit_podiums,
     COALESCE(d2ch.poles_at_circuit, 0) AS driver_2_circuit_poles,
-    ROUND(COALESCE(d2ch.avg_quali_position, 0)::numeric, 2) AS driver_2_circuit_avg_quali,
-    COALESCE(d2ch.best_quali, 0) AS driver_2_circuit_best_quali,
-    ROUND(COALESCE(d2ch.avg_positions_delta, 0)::numeric, 2) AS driver_2_circuit_avg_pos_delta,
     
     -- Driver 2 Season Stats
     COALESCE(d2ss.season_points, 0) AS driver_2_season_points,
-    ROUND(COALESCE(d2ss.season_avg_finish, 0)::numeric, 2) AS driver_2_season_avg_finish,
     COALESCE(d2ss.season_wins, 0) AS driver_2_season_wins,
     COALESCE(d2ss.season_podiums, 0) AS driver_2_season_podiums,
     d2ss.championship_position AS driver_2_championship_pos
 
 FROM circuit_info cinfo
 
--- Join Driver 1 data
-CROSS JOIN driver d1
+-- Join Driver 1 race performance and details
+CROSS JOIN driver_1_race_performance d1rp
+LEFT JOIN driver d1 ON d1rp.driver_id = d1.id
 LEFT JOIN country nat1 ON d1.nationality_country_id = nat1.id
-LEFT JOIN driver_1_race_performance d1rp ON d1.id = d1rp.driver_id
-LEFT JOIN driver_1_circuit_history d1ch ON d1.id = d1ch.driver_id
-LEFT JOIN driver_1_season_stats d1ss ON d1.id = d1ss.driver_id
 
--- Join Driver 2 data
-CROSS JOIN driver d2
+-- Join Driver 2 race performance and details
+CROSS JOIN driver_2_race_performance d2rp
+LEFT JOIN driver d2 ON d2rp.driver_id = d2.id
 LEFT JOIN country nat2 ON d2.nationality_country_id = nat2.id
-LEFT JOIN driver_2_race_performance d2rp ON d2.id = d2rp.driver_id
-LEFT JOIN driver_2_circuit_history d2ch ON d2.id = d2ch.driver_id
-LEFT JOIN driver_2_season_stats d2ss ON d2.id = d2ss.driver_id
 
-WHERE d1.id = %s AND d2.id = %s;
+-- Join circuit history (optional - might be first race at circuit)
+LEFT JOIN driver_1_circuit_history d1ch ON d1.id = d1ch.driver_id
+LEFT JOIN driver_2_circuit_history d2ch ON d2.id = d2ch.driver_id
+
+-- Join season stats (optional)
+LEFT JOIN driver_1_season_stats d1ss ON d1.id = d1ss.driver_id
+LEFT JOIN driver_2_season_stats d2ss ON d2.id = d2ss.driver_id;

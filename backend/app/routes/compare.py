@@ -165,33 +165,38 @@ def compare_drivers():
         # Load the complex comparison query from SQL file
         query = load_sql_query('compare_driver_performance.sql')
         
-        # Parameters in order of appearance in SQL:
-        # CTE1: driver_1_id, race_1_id
-        # CTE2: driver_2_id, race_2_id
-        # CTE3: driver_1_id, circuit_id
-        # CTE4: driver_2_id, circuit_id
-        # CTE5: driver_1_id (subquery), driver_1_id, race_1_id
-        # CTE6: driver_2_id (subquery), driver_2_id, race_2_id
-        # CTE7: circuit_id
-        # WHERE: driver_1_id, driver_2_id
+        # Parameters in order of appearance in SQL (21 total):
+        # CTE1 (race_1_all_positions): race_1_id
+        # CTE2 (driver_1_race_performance): driver_1_id
+        # CTE3 (race_2_all_positions): race_2_id
+        # CTE4 (driver_2_race_performance): driver_2_id
+        # CTE5 (driver_1_circuit_history): driver_1_id, circuit_id
+        # CTE6 (driver_2_circuit_history): driver_2_id, circuit_id
+        # CTE7 (driver_1_season_stats): driver_1_id, race_1_id, driver_1_id, race_1_id, driver_1_id, race_1_id
+        # CTE8 (driver_2_season_stats): driver_2_id, race_2_id, driver_2_id, race_2_id, driver_2_id, race_2_id
+        # CTE9 (circuit_info): circuit_id
         params = (
-            data['driver_1_id'],          # CTE1
-            int(data['race_1_id']),
-            data['driver_2_id'],          # CTE2
-            int(data['race_2_id']),
-            data['driver_1_id'],          # CTE3
-            data['circuit_id'],
-            data['driver_2_id'],          # CTE4
-            data['circuit_id'],
-            data['driver_1_id'],          # CTE5 subquery
-            data['driver_1_id'],          # CTE5 main
-            int(data['race_1_id']),
-            data['driver_2_id'],          # CTE6 subquery
-            data['driver_2_id'],          # CTE6 main
-            int(data['race_2_id']),
-            data['circuit_id'],           # CTE7
-            data['driver_1_id'],          # WHERE
-            data['driver_2_id']
+            int(data['race_1_id']),        # CTE1: race_1_id
+            data['driver_1_id'],           # CTE2: driver_1_id
+            int(data['race_2_id']),        # CTE3: race_2_id
+            data['driver_2_id'],           # CTE4: driver_2_id
+            data['driver_1_id'],           # CTE5: driver_1_id
+            data['circuit_id'],            # CTE5: circuit_id
+            data['driver_2_id'],           # CTE6: driver_2_id
+            data['circuit_id'],            # CTE6: circuit_id
+            data['driver_1_id'],           # CTE7: driver_1_id (wins subquery)
+            int(data['race_1_id']),        # CTE7: race_1_id (wins subquery)
+            data['driver_1_id'],           # CTE7: driver_1_id (podiums subquery)
+            int(data['race_1_id']),        # CTE7: race_1_id (podiums subquery)
+            data['driver_1_id'],           # CTE7: driver_1_id (main WHERE)
+            int(data['race_1_id']),        # CTE7: race_1_id (main WHERE)
+            data['driver_2_id'],           # CTE8: driver_2_id (wins subquery)
+            int(data['race_2_id']),        # CTE8: race_2_id (wins subquery)
+            data['driver_2_id'],           # CTE8: driver_2_id (podiums subquery)
+            int(data['race_2_id']),        # CTE8: race_2_id (podiums subquery)
+            data['driver_2_id'],           # CTE8: driver_2_id (main WHERE)
+            int(data['race_2_id']),        # CTE8: race_2_id (main WHERE)
+            data['circuit_id']             # CTE9: circuit_id
         )
         
         db.execute(query, params)
