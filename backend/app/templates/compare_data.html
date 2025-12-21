@@ -324,6 +324,232 @@
       transform: translateY(-2px);
       box-shadow: 0 16px 28px rgba(255, 30, 21, 0.4);
     }
+
+    .compare-btn.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .compare-btn.loading::after {
+      content: '...';
+      animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    /* ===== COMPARISON RESULTS ===== */
+    .comparison-results {
+      margin-top: 40px;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .circuit-info-header {
+      text-align: center;
+      padding: 30px;
+      background: linear-gradient(135deg, rgba(255, 30, 21, 0.1) 0%, rgba(255, 208, 56, 0.05) 100%);
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .circuit-info-header h2 {
+      font-family: Montserrat, sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      color: var(--f1-white);
+    }
+
+    .circuit-info-header p {
+      color: var(--f1-grey);
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+      .vs-divider {
+        display: none;
+      }
+    }
+
+    .driver-result-card {
+      background: linear-gradient(135deg, #0f151c 0%, #1a2128 50%, #0d1116 100%);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .driver-result-card.left {
+      border-top: 3px solid var(--f1-red);
+    }
+
+    .driver-result-card.right {
+      border-top: 3px solid var(--f1-yellow, #ffd038);
+    }
+
+    .driver-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .driver-number {
+      font-family: Montserrat, sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--f1-grey);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px 16px;
+      border-radius: 10px;
+    }
+
+    .left .driver-number {
+      color: var(--f1-red);
+      background: rgba(255, 30, 21, 0.1);
+    }
+
+    .right .driver-number {
+      color: var(--f1-yellow);
+      background: rgba(255, 208, 56, 0.1);
+    }
+
+    .driver-info h3 {
+      font-family: Montserrat, sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin: 0 0 4px 0;
+      color: var(--f1-white);
+    }
+
+    .driver-info p {
+      color: var(--f1-grey);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .stats-section {
+      margin-bottom: 24px;
+    }
+
+    .stats-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .stats-section h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--f1-grey);
+      margin: 0 0 16px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 500px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-family: Montserrat, sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--f1-white);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--f1-grey);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Highlight winning stats */
+    .stat-item.winner {
+      background: rgba(0, 224, 141, 0.1);
+      border: 1px solid rgba(0, 224, 141, 0.3);
+    }
+
+    .stat-item.winner .stat-value {
+      color: var(--f1-green);
+    }
+
+    /* VS Divider */
+    .vs-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .vs-divider span {
+      font-family: Montserrat, sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--f1-grey);
+      background: linear-gradient(135deg, rgba(255, 30, 21, 0.2), rgba(255, 208, 56, 0.2));
+      padding: 20px 16px;
+      border-radius: 12px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Error state for results */
+    .comparison-error {
+      text-align: center;
+      padding: 40px;
+      background: rgba(255, 30, 21, 0.1);
+      border: 1px solid rgba(255, 30, 21, 0.3);
+      border-radius: 16px;
+      margin-top: 30px;
+    }
+
+    .comparison-error h3 {
+      color: var(--f1-red);
+      margin: 0 0 8px 0;
+    }
+
+    .comparison-error p {
+      color: var(--f1-grey);
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -456,6 +682,225 @@
     <!-- Compare Button -->
     <div class="compare-btn-container">
       <button class="compare-btn" id="compare-btn">Compare Drivers</button>
+    </div>
+
+    <!-- Comparison Results -->
+    <div class="comparison-results" id="comparison-results" style="display: none;">
+      <!-- Circuit Info Header -->
+      <div class="circuit-info-header" id="circuit-info-header">
+        <h2 id="result-circuit-name">Circuit Name</h2>
+        <p id="result-circuit-details">Location • Country • Length • Turns</p>
+      </div>
+
+      <!-- Results Grid -->
+      <div class="results-grid">
+        <!-- Driver 1 Results -->
+        <div class="driver-result-card left">
+          <div class="driver-header">
+            <span class="driver-number" id="result-d1-number">#</span>
+            <div class="driver-info">
+              <h3 id="result-d1-name">Driver 1</h3>
+              <p id="result-d1-details">Nationality • Constructor</p>
+            </div>
+          </div>
+          
+          <div class="stats-section">
+            <h4>Race Performance (<span id="result-d1-year">Year</span>)</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-finish">-</span>
+                <span class="stat-label">Finish</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-grid">-</span>
+                <span class="stat-label">Grid</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-quali">-</span>
+                <span class="stat-label">Quali</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-points">-</span>
+                <span class="stat-label">Points</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-gained">-</span>
+                <span class="stat-label">Pos +/-</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-pole">-</span>
+                <span class="stat-label">Pole</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-section">
+            <h4>Circuit History</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-circuit-races">-</span>
+                <span class="stat-label">Races</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-circuit-wins">-</span>
+                <span class="stat-label">Wins</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-circuit-podiums">-</span>
+                <span class="stat-label">Podiums</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-circuit-poles">-</span>
+                <span class="stat-label">Poles</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-circuit-avg-finish">-</span>
+                <span class="stat-label">Avg Finish</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-circuit-best">-</span>
+                <span class="stat-label">Best</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-circuit-avg-points">-</span>
+                <span class="stat-label">Avg Pts</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-circuit-total-points">-</span>
+                <span class="stat-label">Total Pts</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-section">
+            <h4>Season Stats</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-season-pos">-</span>
+                <span class="stat-label">Champ Pos</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-season-points">-</span>
+                <span class="stat-label">Points</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-season-wins">-</span>
+                <span class="stat-label">Wins</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d1-season-podiums">-</span>
+                <span class="stat-label">Podiums</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VS Divider -->
+        <div class="vs-divider">
+          <span>VS</span>
+        </div>
+
+        <!-- Driver 2 Results -->
+        <div class="driver-result-card right">
+          <div class="driver-header">
+            <span class="driver-number" id="result-d2-number">#</span>
+            <div class="driver-info">
+              <h3 id="result-d2-name">Driver 2</h3>
+              <p id="result-d2-details">Nationality • Constructor</p>
+            </div>
+          </div>
+          
+          <div class="stats-section">
+            <h4>Race Performance (<span id="result-d2-year">Year</span>)</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-finish">-</span>
+                <span class="stat-label">Finish</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-grid">-</span>
+                <span class="stat-label">Grid</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-quali">-</span>
+                <span class="stat-label">Quali</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-points">-</span>
+                <span class="stat-label">Points</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-gained">-</span>
+                <span class="stat-label">Pos +/-</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-pole">-</span>
+                <span class="stat-label">Pole</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-section">
+            <h4>Circuit History</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-circuit-races">-</span>
+                <span class="stat-label">Races</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-circuit-wins">-</span>
+                <span class="stat-label">Wins</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-circuit-podiums">-</span>
+                <span class="stat-label">Podiums</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-circuit-poles">-</span>
+                <span class="stat-label">Poles</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-circuit-avg-finish">-</span>
+                <span class="stat-label">Avg Finish</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-circuit-best">-</span>
+                <span class="stat-label">Best</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-circuit-avg-points">-</span>
+                <span class="stat-label">Avg Pts</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-circuit-total-points">-</span>
+                <span class="stat-label">Total Pts</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-section">
+            <h4>Season Stats</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-season-pos">-</span>
+                <span class="stat-label">Champ Pos</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-season-points">-</span>
+                <span class="stat-label">Points</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-season-wins">-</span>
+                <span class="stat-label">Wins</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="result-d2-season-podiums">-</span>
+                <span class="stat-label">Podiums</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

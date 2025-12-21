@@ -395,19 +395,229 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Compare button click handler (for future implementation)
-    document.getElementById('compare-btn').addEventListener('click', () => {
-        if (!document.getElementById('compare-btn').classList.contains('ready')) {
+    // Compare button click handler
+    document.getElementById('compare-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('compare-btn');
+        if (!btn.classList.contains('ready')) {
             return;
         }
         
-        console.log('Compare data:', {
+        console.log('Comparing drivers:', {
             circuit: state.circuit,
             left: state.left,
             right: state.right
         });
         
-        // TODO: Implement comparison query and display results
-        alert('Comparison feature will be implemented in the next step!');
+        // Show loading state
+        btn.classList.add('loading');
+        btn.textContent = 'Comparing';
+        
+        try {
+            const response = await fetch('/api/compare-drivers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    circuit_id: state.circuit.id,
+                    driver_1_id: state.left.driverId,
+                    race_1_id: state.left.raceId,
+                    driver_2_id: state.right.driverId,
+                    race_2_id: state.right.raceId
+                })
+            });
+            
+            const data = await response.json();
+            console.log('Comparison results:', data);
+            
+            if (data.success) {
+                displayResults(data.comparison);
+            } else {
+                showComparisonError(data.error || 'Failed to compare drivers');
+            }
+        } catch (error) {
+            console.error('Comparison error:', error);
+            showComparisonError(`An error occurred: ${error.message}`);
+        } finally {
+            btn.classList.remove('loading');
+            btn.textContent = 'Compare Drivers';
+        }
     });
+
+    // ============================================
+    // Display Comparison Results
+    // ============================================
+    function displayResults(data) {
+        const resultsContainer = document.getElementById('comparison-results');
+        
+        // Populate circuit header
+        if (data.circuit) {
+            document.getElementById('result-circuit-name').textContent = data.circuit.name || 'Circuit';
+            const details = [
+                data.circuit.location,
+                data.circuit.country,
+                data.circuit.length ? `${data.circuit.length}km` : null,
+                data.circuit.turns ? `${data.circuit.turns} turns` : null
+            ].filter(Boolean).join(' • ');
+            document.getElementById('result-circuit-details').textContent = details;
+        }
+        
+        // Populate Driver 1 (left)
+        populateDriverResults('d1', data.driver_1, 'left');
+        
+        // Populate Driver 2 (right)
+        populateDriverResults('d2', data.driver_2, 'right');
+        
+        // Highlight better stats
+        highlightWinners(data.driver_1, data.driver_2);
+        
+        // Show results
+        resultsContainer.style.display = 'block';
+        
+        // Scroll to results
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function populateDriverResults(prefix, driverData, side) {
+        if (!driverData) return;
+        
+        const info = driverData.info || {};
+        const race = driverData.race_performance || {};
+        const circuit = driverData.circuit_history || {};
+        const season = driverData.season_stats || {};
+        
+        // Driver header
+        document.getElementById(`result-${prefix}-number`).textContent = info.number || '#';
+        document.getElementById(`result-${prefix}-name`).textContent = info.name || 'Unknown Driver';
+        document.getElementById(`result-${prefix}-details`).textContent = 
+            [info.nationality, info.constructor].filter(Boolean).join(' • ') || '-';
+        
+        // Race performance
+        document.getElementById(`result-${prefix}-year`).textContent = race.year || '-';
+        document.getElementById(`result-${prefix}-finish`).textContent = formatPosition(race.finish_position);
+        document.getElementById(`result-${prefix}-grid`).textContent = formatPosition(race.grid_position);
+        document.getElementById(`result-${prefix}-quali`).textContent = formatPosition(race.qualifying_position);
+        document.getElementById(`result-${prefix}-points`).textContent = formatNumber(race.points);
+        document.getElementById(`result-${prefix}-gained`).textContent = formatGained(race.positions_gained);
+        document.getElementById(`result-${prefix}-pole`).textContent = race.pole ? '✓' : '-';
+        
+        // Circuit history
+        document.getElementById(`result-${prefix}-circuit-races`).textContent = formatNumber(circuit.total_races);
+        document.getElementById(`result-${prefix}-circuit-wins`).textContent = formatNumber(circuit.wins);
+        document.getElementById(`result-${prefix}-circuit-podiums`).textContent = formatNumber(circuit.podiums);
+        document.getElementById(`result-${prefix}-circuit-poles`).textContent = formatNumber(circuit.poles);
+        document.getElementById(`result-${prefix}-circuit-avg-finish`).textContent = formatDecimal(circuit.avg_finish);
+        document.getElementById(`result-${prefix}-circuit-best`).textContent = formatPosition(circuit.best_finish);
+        document.getElementById(`result-${prefix}-circuit-avg-points`).textContent = formatDecimal(circuit.avg_points);
+        document.getElementById(`result-${prefix}-circuit-total-points`).textContent = formatNumber(circuit.total_points);
+        
+        // Season stats
+        document.getElementById(`result-${prefix}-season-pos`).textContent = formatPosition(season.championship_position);
+        document.getElementById(`result-${prefix}-season-points`).textContent = formatNumber(season.season_points);
+        document.getElementById(`result-${prefix}-season-wins`).textContent = formatNumber(season.season_wins);
+        document.getElementById(`result-${prefix}-season-podiums`).textContent = formatNumber(season.season_podiums);
+    }
+
+    function formatPosition(val) {
+        if (val === null || val === undefined) return '-';
+        return `P${val}`;
+    }
+
+    function formatNumber(val) {
+        if (val === null || val === undefined) return '-';
+        return val.toString();
+    }
+
+    function formatDecimal(val) {
+        if (val === null || val === undefined) return '-';
+        return parseFloat(val).toFixed(1);
+    }
+
+    function formatGained(val) {
+        if (val === null || val === undefined) return '-';
+        const num = parseInt(val);
+        if (num > 0) return `+${num}`;
+        if (num < 0) return num.toString();
+        return '0';
+    }
+
+    function highlightWinners(driver1, driver2) {
+        // Compare key metrics and highlight the better one
+        const comparisons = [
+            // Race performance - lower is better for positions
+            { d1: 'result-d1-finish', d2: 'result-d2-finish', 
+              v1: driver1?.race_performance?.finish_position, 
+              v2: driver2?.race_performance?.finish_position, 
+              lowerBetter: true },
+            { d1: 'result-d1-grid', d2: 'result-d2-grid', 
+              v1: driver1?.race_performance?.grid_position, 
+              v2: driver2?.race_performance?.grid_position, 
+              lowerBetter: true },
+            { d1: 'result-d1-points', d2: 'result-d2-points', 
+              v1: driver1?.race_performance?.points, 
+              v2: driver2?.race_performance?.points, 
+              lowerBetter: false },
+            
+            // Circuit history - higher is better
+            { d1: 'result-d1-circuit-wins', d2: 'result-d2-circuit-wins', 
+              v1: driver1?.circuit_history?.wins, 
+              v2: driver2?.circuit_history?.wins, 
+              lowerBetter: false },
+            { d1: 'result-d1-circuit-podiums', d2: 'result-d2-circuit-podiums', 
+              v1: driver1?.circuit_history?.podiums, 
+              v2: driver2?.circuit_history?.podiums, 
+              lowerBetter: false },
+            { d1: 'result-d1-circuit-avg-finish', d2: 'result-d2-circuit-avg-finish', 
+              v1: driver1?.circuit_history?.avg_finish, 
+              v2: driver2?.circuit_history?.avg_finish, 
+              lowerBetter: true },
+            
+            // Season stats
+            { d1: 'result-d1-season-pos', d2: 'result-d2-season-pos', 
+              v1: driver1?.season_stats?.championship_position, 
+              v2: driver2?.season_stats?.championship_position, 
+              lowerBetter: true },
+            { d1: 'result-d1-season-points', d2: 'result-d2-season-points', 
+              v1: driver1?.season_stats?.season_points, 
+              v2: driver2?.season_stats?.season_points, 
+              lowerBetter: false }
+        ];
+
+        comparisons.forEach(({ d1, d2, v1, v2, lowerBetter }) => {
+            const el1 = document.getElementById(d1)?.closest('.stat-item');
+            const el2 = document.getElementById(d2)?.closest('.stat-item');
+            
+            if (!el1 || !el2) return;
+            
+            // Remove existing winner class
+            el1.classList.remove('winner');
+            el2.classList.remove('winner');
+            
+            if (v1 === null || v1 === undefined || v2 === null || v2 === undefined) return;
+            
+            const n1 = parseFloat(v1);
+            const n2 = parseFloat(v2);
+            
+            if (isNaN(n1) || isNaN(n2)) return;
+            
+            if (lowerBetter) {
+                if (n1 < n2) el1.classList.add('winner');
+                else if (n2 < n1) el2.classList.add('winner');
+            } else {
+                if (n1 > n2) el1.classList.add('winner');
+                else if (n2 > n1) el2.classList.add('winner');
+            }
+        });
+    }
+
+    function showComparisonError(message) {
+        const resultsContainer = document.getElementById('comparison-results');
+        resultsContainer.innerHTML = `
+            <div class="comparison-error">
+                <h3>Comparison Failed</h3>
+                <p>${message}</p>
+            </div>
+        `;
+        resultsContainer.style.display = 'block';
+    }
 });
