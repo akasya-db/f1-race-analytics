@@ -19,6 +19,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache for circuits and constructors
     let circuitsCache = [];
 
+    // Toast notification function
+    function showToast(message, type = 'success') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
     // ============================================
     // Initialize
     // ============================================
@@ -611,6 +629,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showComparisonError(message) {
+        // Show toast notification
+        showToast(message, 'error');
+        
+        // Also show inline error in results area
         const resultsContainer = document.getElementById('comparison-results');
         resultsContainer.innerHTML = `
             <div class="comparison-error">

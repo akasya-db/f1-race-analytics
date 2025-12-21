@@ -8,6 +8,24 @@ let savedData = {
 let sectionMode = 'custom'; // 'custom' | 'existing'
 let raceMode = 'custom'; // 'custom' | 'existing'
 let sectionSearchAbort = null;
+
+// Toast notification function
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
 let raceSearchAbort = null;
 
 function setSectionMode(mode){
@@ -39,7 +57,7 @@ function toggleSection(sectionName){
 // Save custom constructor data (insert on submit)
 function saveConstructor(){
   if (sectionMode !== 'custom') {
-    alert('Switch mode to "Add custom constructor" to use this form.');
+    showToast('Switch to "Add custom constructor" mode first', 'warning');
     return;
   }
   const form = document.getElementById('constructorForm');
@@ -62,7 +80,7 @@ function saveConstructor(){
 
   savedData.constructor = data;
   renderSummary();
-  alert('Constructor (custom) saved locally. Use "Submit Data" to write to DB.');
+  showToast('Constructor saved locally', 'success');
 }
 
 // Search existing constructors (typeahead)
@@ -99,12 +117,12 @@ async function fetchSectionOptions(query){
 // Save selection of existing constructor (no insert)
 async function saveExistingSection(){
   if (sectionMode !== 'existing') {
-    alert('Switch mode to "Select existing constructor" to use this.');
+    showToast('Switch to "Select existing" mode first', 'warning');
     return;
   }
   const select = document.getElementById('existingSectionSelect');
   if(!select || !select.value){
-    alert('Please select a constructor from the list.');
+    showToast('Please select a constructor from the list', 'warning');
     return;
   }
   
@@ -137,9 +155,9 @@ async function saveExistingSection(){
     console.log('Saved data:', savedData.constructor); // Debug log
     
     renderSummary();
-    alert('Existing constructor selected with full details.');
+    showToast('Constructor selected successfully', 'success');
   } catch(e) {
-    alert('Error loading constructor details: ' + e.message);
+    showToast('Error loading constructor: ' + e.message, 'error');
     console.error(e);
   }
 }
@@ -148,7 +166,7 @@ async function saveExistingSection(){
 // Save custom race data (insert on submit)
 function saveRace(){
   if (raceMode !== 'custom') {
-    alert('Switch mode to "Add custom race" to use this form.');
+    showToast('Switch to "Add custom race" mode first', 'warning');
     return;
   }
   const form = document.getElementById('raceForm');
@@ -171,7 +189,7 @@ function saveRace(){
 
   savedData.race = data;
   renderSummary();
-  alert('Race (custom) saved locally. Use "Submit Data" to write to DB.');
+  showToast('Race saved locally', 'success');
 }
 
 // Search existing races (typeahead)
@@ -208,12 +226,12 @@ async function fetchRaceOptions(query){
 // Save selection of existing race (no insert)
 async function saveExistingRace(){
   if (raceMode !== 'existing') {
-    alert('Switch mode to "Select existing race" to use this.');
+    showToast('Switch to "Select existing" mode first', 'warning');
     return;
   }
   const select = document.getElementById('existingRaceSelect');
   if(!select || !select.value){
-    alert('Please select a race from the list.');
+    showToast('Please select a race from the list', 'warning');
     return;
   }
   
@@ -239,9 +257,9 @@ async function saveExistingRace(){
     };
     
     renderSummary();
-    alert('Existing race selected with full details.');
+    showToast('Race selected successfully', 'success');
   } catch(e) {
-    alert('Error loading race details: ' + e.message);
+    showToast('Error loading race: ' + e.message, 'error');
     console.error(e);
   }
 }
@@ -324,14 +342,14 @@ async function submitAllData(){
     }
 
     if (messages.length === 0) {
-      alert('No data to submit. Please save at least one section first.');
+      showToast('No data to submit. Please save at least one section first.', 'warning');
     } else {
-      alert(messages.join('\n'));
+      showToast(messages.join(' | '), 'success');
     }
 
     renderSummary();
   }catch(err){
-    alert('Error: ' + err.message);
+    showToast('Error: ' + err.message, 'error');
   }finally{
     btn.disabled = false; btn.textContent = 'Submit Data';
   }

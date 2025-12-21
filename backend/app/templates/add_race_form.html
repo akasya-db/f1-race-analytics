@@ -129,16 +129,33 @@
           const result = await response.json();
 
           if (result.success) {
-            alert(mode === 'edit' ? 'Race updated successfully!' : 'Race created successfully!');
-            window.location.href = "{{ url_for('user.user_races_list') }}";
+            showToast(mode === 'edit' ? 'Race updated successfully!' : 'Race created successfully!', 'success');
+            setTimeout(() => window.location.href = "{{ url_for('user.user_races_list') }}", 1200);
           } else {
-            alert('Error: ' + result.error);
+            showToast('Error: ' + result.error, 'error');
           }
         } catch (err) {
           console.error('Submission failed:', err);
-          alert('Failed to submit form. Please try again.');
+          showToast('Failed to submit form. Please try again.', 'error');
         }
       });
+
+      function showToast(message, type = 'success') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.className = 'toast-container';
+          document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 300);
+        }, 4000);
+      }
     });
   </script>
   <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>

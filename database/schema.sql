@@ -27,7 +27,7 @@ CREATE TABLE country (
 -- User accounts
 CREATE TABLE "user" (
     id            VARCHAR(100) PRIMARY KEY,
-    country_id    VARCHAR(100) REFERENCES country(id),
+    country_id    VARCHAR(100) REFERENCES country(id) ON DELETE CASCADE,
     username      VARCHAR(100) NOT NULL UNIQUE,
     password_hash TEXT         NOT NULL,
     email         VARCHAR(255) NOT NULL UNIQUE,
@@ -57,8 +57,8 @@ CREATE TABLE circuit (
   length            DECIMAL(6,3)  NOT NULL,
   turns             INT           NOT NULL,
   total_races_held  INT           NOT NULL,
-  PRIMARY KEY (id),
-  FOREIGN KEY (country_id) REFERENCES country (id)
+    PRIMARY KEY (id),
+    FOREIGN KEY (country_id) REFERENCES country (id) ON DELETE CASCADE
 );
 
 CREATE INDEX circuit_name_idx ON circuit(name);
@@ -80,8 +80,8 @@ CREATE TABLE constructor (
     total_pole_positions         INTEGER       NOT NULL,
     is_real                      BOOLEAN       DEFAULT TRUE,
     PRIMARY KEY (id),
-    FOREIGN KEY (country_id) REFERENCES country(id),
-    FOREIGN KEY (user_id)    REFERENCES "user"(id)
+    FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id)    REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE INDEX constructor_name_idx ON constructor(name);
@@ -115,9 +115,9 @@ CREATE TABLE driver (
     is_real                         BOOLEAN      DEFAULT TRUE,
     user_id                         VARCHAR(100)  DEFAULT NULL,
 
-    FOREIGN KEY (country_of_birth_country_id) REFERENCES country(id),
-    FOREIGN KEY (nationality_country_id)      REFERENCES country(id),
-    FOREIGN KEY (user_id)    REFERENCES "user"(id)
+    FOREIGN KEY (country_of_birth_country_id) REFERENCES country(id) ON DELETE CASCADE,
+    FOREIGN KEY (nationality_country_id)      REFERENCES country(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id)    REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE INDEX driver_name_idx ON driver(full_name);
@@ -140,7 +140,7 @@ CREATE TABLE race (
     is_real              BOOLEAN      DEFAULT TRUE,
     user_id              VARCHAR(100)  DEFAULT NULL,
 
-    FOREIGN KEY (user_id)    REFERENCES "user"(id),
+    FOREIGN KEY (user_id)    REFERENCES "user"(id) ON DELETE CASCADE,
     UNIQUE (year, round)
 );
 
@@ -165,10 +165,10 @@ CREATE TABLE race_data (
     is_real                                 BOOLEAN      DEFAULT FALSE,
     created_at                              TIMESTAMP    NOT NULL DEFAULT NOW(),
 
-    FOREIGN KEY (user_id)        REFERENCES "user"(id),
-    FOREIGN KEY (constructor_id) REFERENCES constructor (id),
-    FOREIGN KEY (driver_id)      REFERENCES driver      (id),
-    FOREIGN KEY (race_id)        REFERENCES race        (id)
+    FOREIGN KEY (user_id)        REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (constructor_id) REFERENCES constructor (id) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id)      REFERENCES driver      (id) ON DELETE CASCADE,
+    FOREIGN KEY (race_id)        REFERENCES race        (id) ON DELETE CASCADE
 );
 
 
@@ -188,8 +188,8 @@ CREATE TABLE race_driver_standing (
 
     PRIMARY KEY (race_id, driver_id),
 
-    FOREIGN KEY (race_id)   REFERENCES race(id),
-    FOREIGN KEY (driver_id) REFERENCES driver(id)
+    FOREIGN KEY (race_id)   REFERENCES race(id) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES driver(id) ON DELETE CASCADE
 );
 
 CREATE INDEX rds_race_id_idx ON race_driver_standing(race_id);
@@ -197,8 +197,8 @@ CREATE INDEX rds_driver_id_idx ON race_driver_standing(driver_id);
 
 -- Race constructor standings
 CREATE TABLE race_constructor_standing (
-    race_id            INT          NOT NULL REFERENCES race(id),
-    constructor_id     VARCHAR(100) NOT NULL REFERENCES constructor(id),
+    race_id            INT          NOT NULL REFERENCES race(id) ON DELETE CASCADE,
+    constructor_id     VARCHAR(100) NOT NULL REFERENCES constructor(id) ON DELETE CASCADE,
     position_number    INT,
     points             DECIMAL(8,2) NOT NULL,
 

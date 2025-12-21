@@ -125,16 +125,33 @@
           });
           const payload = await res.json();
           if (payload.success) {
-            alert(mode === 'edit' ? 'Race data updated!' : 'Race data created!');
-            window.location.href = "{{ url_for('user.user_race_data_list') }}";
+            showToast(mode === 'edit' ? 'Race data updated!' : 'Race data created!', 'success');
+            setTimeout(() => window.location.href = "{{ url_for('user.user_race_data_list') }}", 1200);
           } else {
-            alert('Error: ' + payload.error);
+            showToast('Error: ' + payload.error, 'error');
           }
         } catch (err) {
           console.error(err);
-          alert('Failed to submit form');
+          showToast('Failed to submit form', 'error');
         }
       });
+
+      function showToast(message, type = 'success') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.className = 'toast-container';
+          document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 300);
+        }, 4000);
+      }
     });
   </script>
   <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>

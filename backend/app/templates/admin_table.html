@@ -79,7 +79,7 @@
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                 </svg>
               </a>
-              <form method="POST" action="{{ url_for('admin.admin_table_delete', table_name=table_name, record_id=record[table_info.id_column]) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this record? This action cannot be undone.');">
+              <form method="POST" action="{{ url_for('admin.admin_table_delete', table_name=table_name, record_id=record[table_info.id_column]) }}" style="display: inline;" onsubmit="return confirmCascadeDelete('{{ table_name }}', this);">
                 <button type="submit" class="btn-icon btn-delete" title="Delete">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -116,7 +116,98 @@
     {% endif %}
   </div>
 
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </div>
+        <h3 class="modal-title">Confirm Delete</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-item-name" id="modalItemName"></div>
+        <div class="modal-warning">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span id="modalWarningText"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+        <button type="button" class="modal-btn modal-btn-delete" id="modalConfirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Cascade delete warnings per table
+    const cascadeWarnings = {
+      'race': 'Deleting this race will also delete ALL related race data (lap times, standings, results) and championship standings!',
+      'circuit': 'Deleting this circuit will also delete ALL races held at this circuit and their associated data!',
+      'country': 'Deleting this country will affect ALL related circuits and drivers!',
+      'constructor': 'Deleting this constructor will also delete ALL related race data, standings, and championship entries!',
+      'driver': 'Deleting this driver will also delete ALL related race data and standings!',
+      'race_data': 'Deleting this race data entry is permanent.',
+      'race_constructor_standing': 'Deleting this constructor standing is permanent.',
+      'race_driver_standing': 'Deleting this driver standing is permanent.',
+      'user': 'Deleting this user will also delete ALL their custom races, race data, and constructors!'
+    };
+
+    let pendingDeleteForm = null;
+    const modal = document.getElementById('deleteModal');
+    const modalItemName = document.getElementById('modalItemName');
+    const modalWarningText = document.getElementById('modalWarningText');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    function confirmCascadeDelete(tableName, form) {
+      pendingDeleteForm = form;
+      const warning = cascadeWarnings[tableName] || 'This will delete the record and all related data.';
+      
+      // Get record identifier from the row
+      const row = form.closest('tr');
+      const firstCell = row ? row.querySelector('td:first-child') : null;
+      const recordName = firstCell ? firstCell.textContent.trim() : 'this record';
+      
+      modalItemName.textContent = recordName;
+      modalWarningText.textContent = warning + ' This action cannot be undone.';
+      modal.classList.add('active');
+      
+      return false; // Prevent form submission
+    }
+
+    modalCancel.addEventListener('click', () => {
+      modal.classList.remove('active');
+      pendingDeleteForm = null;
+    });
+
+    modalConfirm.addEventListener('click', () => {
+      if (pendingDeleteForm) {
+        pendingDeleteForm.submit();
+      }
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        pendingDeleteForm = null;
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        modal.classList.remove('active');
+        pendingDeleteForm = null;
+      }
+    });
+
     // Auto-remove flash messages after 4 seconds
     document.addEventListener('DOMContentLoaded', function() {
       const flashMessages = document.querySelectorAll('.flash-message');

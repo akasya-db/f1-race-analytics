@@ -175,45 +175,264 @@
     {% endif %}
   </div>
 
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </div>
+        <h3 class="modal-title">Confirm Delete</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-item-name" id="modalItemName"></div>
+        <div class="modal-warning">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span id="modalWarningText"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+        <button type="button" class="modal-btn modal-btn-delete" id="modalConfirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(7, 9, 12, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      background: linear-gradient(135deg, #0f151c 0%, #1a2128 50%, #0d1116 100%);
+      border: 1px solid rgba(255, 30, 21, 0.3);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 30, 21, 0.15);
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+    .modal-overlay.active .modal-content {
+      transform: scale(1) translateY(0);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .modal-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--f1-red), #c20f09);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .modal-icon svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+    .modal-title {
+      font-family: Montserrat, Poppins, sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--f1-white);
+      margin: 0;
+    }
+    .modal-body {
+      margin-bottom: 28px;
+    }
+    .modal-item-name {
+      background: rgba(255, 30, 21, 0.1);
+      border: 1px solid rgba(255, 30, 21, 0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: var(--f1-white);
+      word-break: break-word;
+    }
+    .modal-warning {
+      background: rgba(255, 208, 56, 0.1);
+      border: 1px solid rgba(255, 208, 56, 0.3);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--f1-yellow);
+      font-size: 14px;
+      line-height: 1.5;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .modal-warning svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .modal-btn {
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      font-family: inherit;
+    }
+    .modal-btn-cancel {
+      background: rgba(169, 189, 209, 0.1);
+      border: 1px solid rgba(169, 189, 209, 0.3);
+      color: var(--f1-grey);
+    }
+    .modal-btn-cancel:hover {
+      background: rgba(169, 189, 209, 0.2);
+      color: var(--f1-white);
+    }
+    .modal-btn-delete {
+      background: linear-gradient(135deg, var(--f1-red), #c20f09);
+      color: white;
+      box-shadow: 0 4px 12px rgba(255, 30, 21, 0.3);
+    }
+    .modal-btn-delete:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 30, 21, 0.4);
+    }
+  </style>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const deleteButtons = document.querySelectorAll('.delete-trigger');
+      const modal = document.getElementById('deleteModal');
+      const modalItemName = document.getElementById('modalItemName');
+      const modalWarningText = document.getElementById('modalWarningText');
+      const modalCancel = document.getElementById('modalCancel');
+      const modalConfirm = document.getElementById('modalConfirm');
+
+      const cascadeWarnings = {
+        'race': 'This will also delete all related race data, driver standings, and constructor standings for this race.',
+        'constructor': 'This will also delete all race data entries that reference this constructor.',
+        'race_data': 'This race data entry will be permanently deleted.',
+        'driver': 'This will also delete all race data and standings entries for this driver.'
+      };
+
+      let pendingDelete = null;
 
       deleteButtons.forEach(btn => {
-        btn.addEventListener('click', async function() {
+        btn.addEventListener('click', function() {
           const id = this.getAttribute('data-id');
           const name = this.getAttribute('data-name');
           const type = this.getAttribute('data-type');
 
-          if (!confirm('Are you sure you want to delete "' + name + '"?')) {
-            return;
-          }
-
-          let apiUrl;
-          if (type === 'race') apiUrl = '/api/delete-race/' + id;
-          else if (type === 'constructor') apiUrl = '/api/delete-constructor/' + id;
-          else if (type === 'race_data') apiUrl = '/api/delete-race-data/' + id;
-          else apiUrl = '/api/delete';
-
-          try {
-            const response = await fetch(apiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' }
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-              location.reload();
-            } else {
-              alert('Error: ' + result.error);
-            }
-          } catch (err) {
-            console.error('Delete failed:', err);
-            alert('Failed to connect to the server.');
-          }
+          pendingDelete = { id, name, type };
+          modalItemName.textContent = name;
+          const warning = cascadeWarnings[type] || 'This record will be permanently deleted.';
+          modalWarningText.textContent = warning + ' This action cannot be undone.';
+          modal.classList.add('active');
         });
       });
+
+      modalCancel.addEventListener('click', () => {
+        modal.classList.remove('active');
+        pendingDelete = null;
+      });
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+          pendingDelete = null;
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+          modal.classList.remove('active');
+          pendingDelete = null;
+        }
+      });
+
+      modalConfirm.addEventListener('click', async () => {
+        if (!pendingDelete) return;
+        const { id, type } = pendingDelete;
+
+        let apiUrl;
+        if (type === 'race') apiUrl = '/api/delete-race/' + id;
+        else if (type === 'constructor') apiUrl = '/api/delete-constructor/' + id;
+        else if (type === 'race_data') apiUrl = '/api/delete-race-data/' + id;
+        else if (type === 'driver') apiUrl = '/api/delete-driver/' + id;
+        else apiUrl = '/api/delete';
+
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const result = await response.json();
+          if (result.success) {
+            showToast('Record deleted successfully', 'success');
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            modal.classList.remove('active');
+            showToast('Error: ' + result.error, 'error');
+          }
+        } catch (err) {
+          console.error('Delete failed:', err);
+          modal.classList.remove('active');
+          showToast('Failed to connect to the server.', 'error');
+        }
+      });
+
+      // Toast notification function
+      function showToast(message, type = 'success') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.className = 'toast-container';
+          document.body.appendChild(container);
+        }
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 300);
+        }, 4000);
+      }
     });
   </script>
   <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
