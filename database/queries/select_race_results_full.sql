@@ -25,7 +25,7 @@ SELECT
     co.name AS country_name,
     co.alpha3_code AS country_code,
     
-    -- Race result data (JOIN 4: race_data)
+    -- Race result data (JOIN 4: race_data - from deduplicated subquery)
     rd.id AS result_id,
     rd.position_display_order AS finish_position,
     rd.driver_number,
@@ -56,8 +56,12 @@ FROM race r
 INNER JOIN circuit cir ON r.circuit_id = cir.id
 -- JOIN 2: Country of the circuit
 INNER JOIN country co ON cir.country_id = co.id
--- JOIN 3: Race results data
-INNER JOIN race_data rd ON rd.race_id = r.id
+-- JOIN 3: Race results data (nested subquery to deduplicate - one row per driver per race)
+INNER JOIN (
+    SELECT DISTINCT ON (race_id, driver_id) *
+    FROM race_data
+    ORDER BY race_id, driver_id, position_display_order ASC NULLS LAST
+) rd ON rd.race_id = r.id
 -- JOIN 4: Driver who participated
 INNER JOIN driver d ON rd.driver_id = d.id
 -- JOIN 5: Constructor/Team

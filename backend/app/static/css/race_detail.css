@@ -124,11 +124,7 @@
 .standings-box h3 {
   margin: 0 0 8px 0;
   font-size: 0.95rem;
-  position: sticky;
-  top: 0;
-  background: var(--card-bg, #1a1a2e);
   padding-bottom: 6px;
-  z-index: 1;
 }
 
 .standings-table {
@@ -137,10 +133,7 @@
 }
 
 .standings-table thead {
-  position: sticky;
-  top: 28px;
   background: var(--card-bg, #1a1a2e);
-  z-index: 1;
 }
 
 .standings-table thead th {
