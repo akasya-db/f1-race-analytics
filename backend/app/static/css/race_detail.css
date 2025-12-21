@@ -119,6 +119,27 @@
 .standings-box {
   max-height: 260px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--f1-red, #e10600) rgba(255,255,255,0.05);
+}
+
+/* Custom scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+.standings-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.standings-box::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+}
+
+.standings-box::-webkit-scrollbar-thumb {
+  background: var(--f1-red, #e10600);
+  border-radius: 4px;
+}
+
+.standings-box::-webkit-scrollbar-thumb:hover {
+  background: #ff1801;
 }
 
 .standings-box h3 {
