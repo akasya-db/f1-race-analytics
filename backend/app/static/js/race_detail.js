@@ -22,20 +22,24 @@ async function loadRaceDetail() {
   }
 
   try {
-    // fetch full race results using complex 6-table join endpoint
-    const fullResultsRes = await fetch(`/api/race_results_full/${raceId}`);
-    if (fullResultsRes.ok) {
-      const fullData = await fullResultsRes.json();
-      const rows = fullData?.race_results || [];
-      renderFullResults(rows);
-    } else {
-      // fallback to simple race_data endpoint
-      const payload = window.fetchRaceData
-        ? await window.fetchRaceData({ raceId: raceId, page: 1 })
-        : await (await fetch(`/api/race_data?race_id=${raceId}`)).json();
+    // fetch race results using simple race_data endpoint first
+    const payload = window.fetchRaceData
+      ? await window.fetchRaceData({ raceId: raceId, page: 1 })
+      : await (await fetch(`/api/race_data?race_id=${raceId}`)).json();
 
-      const rows = payload?.race_data || [];
+    const rows = payload?.race_data || [];
+    if (rows.length > 0) {
       renderResults(rows);
+    } else {
+      // fallback to complex 6-table join endpoint
+      const fullResultsRes = await fetch(`/api/race_results_full/${raceId}`);
+      if (fullResultsRes.ok) {
+        const fullData = await fullResultsRes.json();
+        const fullRows = fullData?.race_results || [];
+        renderFullResults(fullRows);
+      } else {
+        document.getElementById('resultsBox').innerHTML = '<p class="empty-state">No results available for this race.</p>';
+      }
     }
   } catch (err) {
     console.error('Error fetching results:', err);
