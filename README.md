@@ -1,6 +1,6 @@
 # Akasya F1DB — Formula 1 Performance Analytics Platform
 
-**Akasya F1DB** is a web‑based analytics platform that merges real Formula 1 data with user‑generated racing data from multiplayer simulations. The goal is to let racing enthusiasts compare their own performance with real‑world F1 results through interactive statistics, visualizations, and database‑driven insights.
+**Akasya F1DB** is a web‑based analytics platform that merges real Formula 1 data with user‑generated racing data from multiplayer simulations. The goal is to let racing enthusiasts compare their own performance with real‑world F1 results through interactive statistics, and database‑driven insights.
 
 ## 🌍 Project Vision
 
@@ -8,9 +8,9 @@ The platform is designed as an educational yet fully functional database applica
 
 When completed, the system will allow users to:
 
-* Browse and filter Formula 1 races, circuits, drivers, and constructors.
+* Browse and filter Formula 1 races, drivers, and constructors.
 * Upload their own simulation race data and compare it to official statistics.
-* Analyze lap times, podiums, wins, and season performance metrics through charts and rankings.
+* Analyze podiums, wins, and season performance metrics through rankings.
 * Observe relationships between variables such as qualifying vs. grid position or constructor vs. driver standings.
 * Interact with the data through a clean Flask‑based web interface backed by a PostgreSQL database.
 
