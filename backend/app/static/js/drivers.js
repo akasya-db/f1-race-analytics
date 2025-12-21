@@ -65,34 +65,31 @@ function renderDrivers(list) {
         <div class="card" onclick="openDriverModal('${d.id}')">
             <div class="team-info">
                 <div class="name">${d.full_name}</div>
+
+                <!-- ÜST SATIR: doğum yeri -->
                 <div class="nation">
-                    ${d.nationality} • Born: ${d.date_of_birth || "-"}
+                   Born: ${d.nationality} •  ${d.place_of_birth || "-"}
                 </div>
 
-                <div class="stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Wins</span>
-                        <span class="stat-value">${d.total_race_wins}</span>
+                <!-- ALT SATIR: doğum tarihi + wins yan yana -->
+                <div style="display:flex; justify-content:space-between; gap:16px; margin-top:10px; align-items:flex-start;">
+                    <div>
+                        <div style="font-size:12px; opacity:.7; letter-spacing:.08em;">DATE OF BIRTH</div>
+                        <div style="font-weight:600;">${d.date_of_birth || "-"}</div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Podiums</span>
-                        <span class="stat-value">${d.total_podiums}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Points</span>
-                        <span class="stat-value">${d.total_points}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Poles</span>
-                        <span class="stat-value">${d.total_pole_positions}</span>
+
+                    <div style="text-align:right;">
+                        <div style="font-size:12px; opacity:.7; letter-spacing:.08em;">WINS</div>
+                        <div style="font-weight:800; font-size:22px; line-height:1;">${d.total_race_wins ?? 0}</div>
                     </div>
                 </div>
             </div>
 
-            <button class="btn">View Driver</button>
+            <button class="btn" type="button">View Driver</button>
         </div>
     `).join("");
 }
+
 
 function renderPagination(p) {
     const container = document.getElementById("pagination");
@@ -192,7 +189,16 @@ function closeDriverModal() {
 document.addEventListener("DOMContentLoaded", () => {
     setupDriverFilters();
     fetchDrivers();
-
+    const section = document.getElementById("leaderboardSection");
+    const btn = document.getElementById("toggleLeaderboard");
+    if (section && btn) {
+    // default display:none ise, buton kırmızı başlasın
+    if (section.style.display === "none" || getComputedStyle(section).display === "none") {
+      btn.classList.add("btn-danger");
+      btn.classList.remove("secondary");
+      btn.textContent = "Show Leaderboard";
+    }
+  }
     document.querySelectorAll(".top-n-btn").forEach(btn => {
         btn.addEventListener("click", () => {
             document.querySelectorAll(".top-n-btn")
@@ -209,8 +215,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.getElementById("toggleLeaderboard").addEventListener("click", () => {
     const section = document.getElementById("leaderboardSection");
-    section.style.display = section.style.display === "none" ? "block" : "none";
+    const btn = document.getElementById("toggleLeaderboard");
+
+    const isOpen = section.style.display !== "none";
+
+    if (isOpen) {
+        section.style.display = "none";
+        btn.textContent = "Show Leaderboard";
+
+        // kapalıyken KIRMIZI
+        btn.classList.add("btn-danger");
+        btn.classList.remove("secondary");
+    } else {
+        section.style.display = "block";
+        btn.textContent = "Close Leaderboard";
+
+        // açıkken NORMAL
+        btn.classList.remove("btn-danger");
+        btn.classList.add("secondary");
+    }
 });
+
+
 
 document.getElementById("loadLeaderboard").addEventListener("click", async () => {
     const from = document.getElementById("leaderboardYearFrom").value;

@@ -465,37 +465,37 @@ def update_driver(driver_id):
     finally:
         db.close()
 
-@drivers_bp.route("/api/driver-leaderboard")
+
+@drivers_bp.route("/api/driver-leaderboard", methods=["GET"])
 def driver_leaderboard():
     db = DatabaseConnection()
     try:
         year_from = request.args.get("year_from", type=int)
-        year_to = request.args.get("year_to", type=int)
-        limit = request.args.get("limit", 10, type=int)
+        year_to   = request.args.get("year_to", type=int)
+        limit     = request.args.get("limit", default=10, type=int)
 
+        # limit whitelist
+        if limit not in (10, 25, 50):
+            limit = 10
 
-        sql = """
-        SELECT
-            d.id,
-            d.full_name,
-            COUNT(DISTINCT rds.race_id) FILTER (WHERE rds.position_number = 1) AS race_wins,
-            SUM(rds.points) AS total_points,
-            COUNT(DISTINCT r.year) FILTER (
-                WHERE rds.position_number = 1
-            ) AS championship_wins
-        FROM race_driver_standing rds
-        JOIN race r ON r.id = rds.race_id
-        JOIN driver d ON d.id = rds.driver_id
-        WHERE
-            (%(year_from)s IS NULL OR r.year >= %(year_from)s)
-            AND (%(year_to)s IS NULL OR r.year <= %(year_to)s)
-        GROUP BY d.id, d.full_name
-        ORDER BY
-            championship_wins DESC,
-            race_wins DESC,
-            total_points DESC
-        LIMIT %(limit)s;
-        """
+        # year_from/year_to boşsa: DB'den min-max al
+        if year_from is None or year_to is None:
+            db.execute("SELECT MIN(year) AS min_year, MAX(year) AS max_year FROM race;")
+            r = db.fetchone()
+
+            # race tablosu boşsa güvenli fallback
+            min_year = r["min_year"] if r and r["min_year"] is not None else 1950
+            max_year = r["max_year"] if r and r["max_year"] is not None else 2100
+
+            if year_from is None:
+                year_from = min_year
+            if year_to is None:
+                year_to = max_year
+
+        if year_from > year_to:
+            return jsonify({"error": "year_from must be <= year_to"}), 400
+
+        sql = get_sql_query("driver_leaderboard.sql")
 
         db.execute(sql, {
             "year_from": year_from,
@@ -503,7 +503,12 @@ def driver_leaderboard():
             "limit": limit
         })
 
-        return jsonify([dict(r) for r in db.fetchall()])
+        rows = db.fetchall()
+        return jsonify([dict(r) for r in rows])
+
+    except Exception as e:
+        print("LEADERBOARD ERROR:", e)
+        return jsonify({"error": "Leaderboard error"}), 500
 
     finally:
         db.close()
