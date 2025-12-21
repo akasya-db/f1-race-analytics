@@ -2,6 +2,7 @@
 Flask Application Factory
 """
 from flask import Flask, session, current_app
+from datetime import datetime
 from flask_cors import CORS
 from app.config import Config
 
@@ -43,6 +44,26 @@ def create_app():
     app.register_blueprint(drivers_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(user_bp)
+
+    @app.before_request
+    def enforce_session_timeout():
+        """Expire user sessions after configured inactivity window."""
+        if 'user_id' not in session:
+            return
+        timeout = getattr(Config, 'SESSION_TIMEOUT_MINUTES', 0)
+        if timeout <= 0:
+            return
+
+        expires_at = session.get('session_expires_at')
+        now_ts = datetime.utcnow().timestamp()
+        if not expires_at or now_ts > expires_at:
+            from flask import flash, redirect, url_for, request
+            session.clear()
+            exempt_endpoints = {'auth.login', 'auth.logout', 'auth.register', 'auth.verify_email', 'static'}
+            if not request.endpoint or request.endpoint not in exempt_endpoints:
+                flash('Session expired. Please login again.', 'warning')
+            return redirect(url_for('auth.login'))
+        session['session_expires_at'] = now_ts + (timeout * 60)
 
     @app.context_processor
     def inject_user_context():

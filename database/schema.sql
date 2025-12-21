@@ -31,6 +31,10 @@ CREATE TABLE "user" (
     username      VARCHAR(100) NOT NULL UNIQUE,
     password_hash TEXT         NOT NULL,
     email         VARCHAR(255) NOT NULL UNIQUE,
+    email_verified BOOLEAN      NOT NULL DEFAULT FALSE,
+    email_verified_at TIMESTAMP,
+    email_verification_token VARCHAR(255),
+    verification_sent_at TIMESTAMP,
     date_joined   TIMESTAMP    NOT NULL DEFAULT NOW(),
     is_admin      BOOLEAN      NOT NULL DEFAULT FALSE
 );

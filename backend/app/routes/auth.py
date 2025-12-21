@@ -1,11 +1,33 @@
 
 from flask import Blueprint, request, render_template, redirect, url_for, flash, session, current_app
-import os
 import bcrypt
+import secrets
+from datetime import datetime, timedelta
 from app.database import DatabaseConnection
 from collections.abc import Mapping
+from app.email_utils import send_verification_email
+from app.config import Config
 
 auth_bp = Blueprint('auth', __name__)
+
+def _next_session_expiry_timestamp() -> float:
+    timeout = max(1, Config.SESSION_TIMEOUT_MINUTES)
+    return (datetime.utcnow() + timedelta(minutes=timeout)).timestamp()
+
+
+def _send_or_refresh_verification(db: DatabaseConnection, user_row) -> None:
+    """Ensure the user has an active verification token and send the email."""
+    token = secrets.token_urlsafe(48)
+    db.execute(
+        '''UPDATE "user"
+           SET email_verification_token = %s,
+               verification_sent_at = NOW()
+           WHERE id = %s''',
+        (token, user_row['id'])
+    )
+    db.commit()
+    verify_url = url_for('auth.verify_email', token=token, _external=True)
+    send_verification_email(user_row['username'], user_row['email'], verify_url)
 
 @auth_bp.route('/')
 def index():
@@ -82,13 +104,26 @@ def register():
                     flash('Email already registered.', 'error')
                     return render_template('register.html', countries=fetch_countries(), form_data=form_data)
                 
+                verification_token = secrets.token_urlsafe(48)
                 db.execute(
-                    'INSERT INTO "user" (id, country_id, username, password_hash, email) VALUES (%s, %s, %s, %s, %s)',
-                    (user_id, country_id if country_id else None, username, hashed_pw.decode('utf-8'), email)
+                    '''INSERT INTO "user"
+                       (id, country_id, username, password_hash, email,
+                        email_verified, email_verification_token, verification_sent_at)
+                       VALUES (%s, %s, %s, %s, %s, FALSE, %s, NOW())''',
+                    (user_id,
+                     country_id if country_id else None,
+                     username,
+                     hashed_pw.decode('utf-8'),
+                     email,
+                     verification_token)
                 )
                 db.commit()
-                
-                flash('Registration successful! Please login.', 'success')
+
+                verify_url = url_for('auth.verify_email', token=verification_token, _external=True)
+                if send_verification_email(username, email, verify_url):
+                    flash('Registration successful! Check your inbox to verify your email before logging in.', 'success')
+                else:
+                    flash('Registration created but email could not be sent. Contact support to verify your account.', 'warning')
                 return redirect(url_for('auth.login'))
             except Exception as e:
                 flash('Registration failed: ' + str(e), 'error')
@@ -114,10 +149,16 @@ def login():
                     db.execute('SELECT * FROM "user" WHERE email = %s', (username_or_email,))
                     user = db.fetchone()
             if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                if not user.get('email_verified'):
+                    _send_or_refresh_verification(db, user)
+                    flash('Please verify your email address. A fresh link has been emailed to you.', 'warning')
+                    return render_template('login.html')
                 # Normalize row to mapping for consistent access
                 session['user_id'] = user['id']
                 session['username'] = user['username']
                 session['email'] = user['email']
+                session['email_verified'] = True
+                session['session_expires_at'] = _next_session_expiry_timestamp()
                 # Get is_admin - handle mapping and other row types
                 if isinstance(user, Mapping):
                     is_admin = user.get('is_admin', False)
@@ -140,6 +181,51 @@ def login():
         finally:
             db.close()
     return render_template('login.html')
+
+@auth_bp.route('/verify-email/<token>')
+def verify_email(token):
+    if not token:
+        flash('Invalid verification link.', 'error')
+        return redirect(url_for('auth.login'))
+
+    db = DatabaseConnection()
+    try:
+        db.execute(
+            '''SELECT id, username, email, email_verified,
+                      verification_sent_at
+               FROM "user"
+               WHERE email_verification_token = %s''',
+            (token,)
+        )
+        user = db.fetchone()
+        if not user:
+            flash('Verification link is invalid or already used.', 'error')
+            return redirect(url_for('auth.login'))
+
+        if user['email_verified']:
+            flash('Your email is already verified. Please login.', 'info')
+            return redirect(url_for('auth.login'))
+
+        sent_at = user.get('verification_sent_at')
+        if sent_at and datetime.utcnow() - sent_at > timedelta(hours=Config.EMAIL_VERIFICATION_VALID_HOURS):
+            _send_or_refresh_verification(db, user)
+            flash('Verification link expired. We have sent a new one.', 'warning')
+            return redirect(url_for('auth.login'))
+
+        db.execute(
+            '''UPDATE "user"
+               SET email_verified = TRUE,
+                   email_verified_at = NOW(),
+                   email_verification_token = NULL,
+                   verification_sent_at = NULL
+               WHERE id = %s''',
+            (user['id'],)
+        )
+        db.commit()
+        flash('Email verified successfully! You can now login.', 'success')
+        return redirect(url_for('auth.login'))
+    finally:
+        db.close()
 
 @auth_bp.route('/logout')
 def logout():
