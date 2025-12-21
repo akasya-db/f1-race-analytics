@@ -34,6 +34,13 @@ def data_panel():
     }
     return render_template('add_data.html', user_modules=user_modules)
 
+
+@user_bp.route('/compare-data')
+def compare_data():
+    """Compare data page - placeholder for future implementation"""
+    return render_template('compare_data.html')
+
+
 # app/routes/user.py
 # app/routes/user.py
 
