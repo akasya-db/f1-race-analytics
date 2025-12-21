@@ -1289,3 +1289,88 @@ a.card, a.card:visited, a.card:hover, a.card:active {
   border-color: var(--f1-red);
   color: white;
 }
+/* Driver modal tiles (only used in driver modal) */
+.driver-divider{
+  height: 2px;
+  width: 100%;
+  margin: 18px 0 22px;
+  background: rgba(255,0,0,.25);
+}
+
+.driver-tiles{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.driver-tile{
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  min-height: 92px;
+}
+
+.driver-tile-title{
+  font-size: 12px;
+  letter-spacing: .12em;
+  opacity: .7;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.driver-tile-value{
+  font-size: 30px;
+  font-weight: 900;
+  color: #ff2d2d;
+}
+
+/* Responsive */
+@media (max-width: 900px){
+  .driver-tiles{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.driver-tile-title .trophy{
+  font-size: 12px;
+  margin-left: 6px;
+  opacity: .9;
+}
+
+.driver-card-metrics{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.driver-card-metric{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.driver-card-metric.right{
+  text-align: right;
+}
+
+.driver-card-label{
+  font-size: 12px;
+  letter-spacing: .10em;
+  opacity: .7;
+  text-transform: uppercase;
+}
+
+.driver-card-value{
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.trophy{
+  font-size: 12px;
+  margin-left: 6px;
+  opacity: .9;
+}
+
+

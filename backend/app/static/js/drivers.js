@@ -54,41 +54,40 @@ async function fetchDrivers(page = 1) {
 }
 
 function renderDrivers(list) {
-    const grid = document.getElementById("driversGrid");
+  const grid = document.getElementById("driversGrid");
 
-    if (!list.length) {
-        grid.innerHTML = `<p class="empty-state">No drivers found.</p>`;
-        return;
-    }
+  if (!list.length) {
+    grid.innerHTML = `<p class="empty-state">No drivers found.</p>`;
+    return;
+  }
 
-    grid.innerHTML = list.map(d => `
-        <div class="card" onclick="openDriverModal('${d.id}')">
-            <div class="team-info">
-                <div class="name">${d.full_name}</div>
+  grid.innerHTML = list.map(d => `
+    <div class="card" onclick="openDriverModal('${d.id}')">
+      <div class="team-info">
+        <div class="name">${d.full_name}</div>
 
-                <!-- ÜST SATIR: doğum yeri -->
-                <div class="nation">
-                   Born: ${d.nationality} •  ${d.place_of_birth || "-"}
-                </div>
-
-                <!-- ALT SATIR: doğum tarihi + wins yan yana -->
-                <div style="display:flex; justify-content:space-between; gap:16px; margin-top:10px; align-items:flex-start;">
-                    <div>
-                        <div style="font-size:12px; opacity:.7; letter-spacing:.08em;">DATE OF BIRTH</div>
-                        <div style="font-weight:600;">${d.date_of_birth || "-"}</div>
-                    </div>
-
-                    <div style="text-align:right;">
-                        <div style="font-size:12px; opacity:.7; letter-spacing:.08em;">WINS</div>
-                        <div style="font-weight:800; font-size:22px; line-height:1;">${d.total_race_wins ?? 0}</div>
-                    </div>
-                </div>
-            </div>
-
-            <button class="btn" type="button">View Driver</button>
+        <div class="nation">
+          Born: ${d.nationality || "-"} • ${d.place_of_birth || "-"}
         </div>
-    `).join("");
+
+        <div class="driver-card-metrics">
+          <div class="driver-card-metric">
+            <div class="driver-card-label">CHAMPIONSHIPS <span class="trophy">🏆</span></div>
+            <div class="driver-card-value">${d.total_championship_wins ?? 0}</div>
+          </div>
+
+          <div class="driver-card-metric right">
+            <div class="driver-card-label">WINS</div>
+            <div class="driver-card-value">${d.total_race_wins ?? 0}</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" type="button">View Driver</button>
+    </div>
+  `).join("");
 }
+
 
 
 function renderPagination(p) {
@@ -161,26 +160,56 @@ function setupDriverFilters() {
 }
 
 function openDriverModal(id) {
-    const d = currentDrivers.find(x => x.id === id);
-    if (!d) return;
+  const d = currentDrivers.find(x => x.id === id);
+  if (!d) return;
 
-    document.getElementById("driverModalTitle").textContent = d.full_name;
-    document.getElementById("driverModalSubtitle").textContent =
-        `${d.nationality} • Born in ${d.place_of_birth || "-"}`;
+  document.getElementById("driverModalTitle").textContent = d.full_name;
+  document.getElementById("driverModalSubtitle").textContent =
+    ` • Born in ${d.nationality}  ${d.place_of_birth || "-"}`;
 
-    document.getElementById("driverModalBody").innerHTML = `
-        <div><strong>Date of Birth:</strong> ${d.date_of_birth}</div>
-        ${d.date_of_death ? `<div><strong>Date of Death:</strong> ${d.date_of_death}</div>` : ""}
-        <div><strong>Birthplace:</strong> ${d.place_of_birth || "-"}</div>
-        <hr>
-        <div><strong>Total Wins:</strong> ${d.total_race_wins}</div>
-        <div><strong>Total Podiums:</strong> ${d.total_podiums}</div>
-        <div><strong>Total Points:</strong> ${d.total_points}</div>
-        <div><strong>Pole Positions:</strong> ${d.total_pole_positions}</div>
-    `;
+  const typeBadge = (d.is_real === false)
+    ? `<span class="pill pill-user">User-generated</span>`
+    : `<span class="pill pill-real">Official F1 Driver</span>`;
 
-    document.getElementById("driverModal").classList.add("active");
+  document.getElementById("driverModalBody").innerHTML = `
+  <div><strong>Date of Birth:</strong> ${d.date_of_birth || "-"}</div>
+  ${d.date_of_death ? `<div><strong>Date of Death:</strong> ${d.date_of_death}</div>` : ""}
+  <div><strong>Birthplace:</strong> ${d.place_of_birth || "-"}</div>
+
+  <div class="driver-divider"></div>
+
+  <div class="driver-tiles">
+    <div class="driver-tile">
+       <div class="driver-tile-title">TOTAL CHAMPIONSHIPS <span class="trophy">🏆</span></div>
+       <div class="driver-tile-value">${d.total_championship_wins ?? 0}</div>
+    </div>
+
+    <div class="driver-tile">
+      <div class="driver-tile-title">TOTAL WINS</div>
+      <div class="driver-tile-value">${d.total_race_wins ?? 0}</div>
+    </div>
+
+    <div class="driver-tile">
+      <div class="driver-tile-title">TOTAL PODIUMS</div>
+      <div class="driver-tile-value">${d.total_podiums ?? 0}</div>
+    </div>
+
+    <div class="driver-tile">
+      <div class="driver-tile-title">TOTAL POINTS</div>
+      <div class="driver-tile-value">${d.total_points ?? "0.00"}</div>
+    </div>
+
+    <div class="driver-tile">
+      <div class="driver-tile-title">POLE POSITIONS</div>
+      <div class="driver-tile-value">${d.total_pole_positions ?? 0}</div>
+    </div>
+  </div>
+`;
+
+
+  document.getElementById("driverModal").classList.add("active");
 }
+
 
 function closeDriverModal() {
     document.getElementById("driverModal").classList.remove("active");
