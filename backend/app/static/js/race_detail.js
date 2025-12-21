@@ -22,13 +22,21 @@ async function loadRaceDetail() {
   }
 
   try {
-    // fetch race results using existing helper if available
-    const payload = window.fetchRaceData
-      ? await window.fetchRaceData({ raceId: raceId, page: 1 })
-      : await (await fetch(`/api/race_data?race_id=${raceId}`)).json();
+    // fetch full race results using complex 6-table join endpoint
+    const fullResultsRes = await fetch(`/api/race_results_full/${raceId}`);
+    if (fullResultsRes.ok) {
+      const fullData = await fullResultsRes.json();
+      const rows = fullData?.race_results || [];
+      renderFullResults(rows);
+    } else {
+      // fallback to simple race_data endpoint
+      const payload = window.fetchRaceData
+        ? await window.fetchRaceData({ raceId: raceId, page: 1 })
+        : await (await fetch(`/api/race_data?race_id=${raceId}`)).json();
 
-    const rows = payload?.race_data || [];
-    renderResults(rows);
+      const rows = payload?.race_data || [];
+      renderResults(rows);
+    }
   } catch (err) {
     console.error('Error fetching results:', err);
     document.getElementById('resultsBox').innerHTML = '<p class="error-state">Unable to load results.</p>';
@@ -175,6 +183,43 @@ function renderResults(rows) {
         <td>${r.constructor_name ?? r.constructor_id}</td>
         <td>${r.race_grid_position_number ?? '-'}</td>
         <td>${r.race_qualification_position_number ?? '-'}</td>
+        <td>${r.race_points ?? '-'}</td>
+      </tr>
+    `);
+  });
+
+  parts.push('</tbody></table>');
+  el.innerHTML = parts.join('');
+}
+
+// Full results renderer using 6-table join data (includes driver nationality, circuit info)
+function renderFullResults(rows) {
+  const el = document.getElementById('resultsBox');
+  if (!el) return;
+
+  if (!rows || rows.length === 0) {
+    el.innerHTML = '<p class="empty-state">No results available for this race.</p>';
+    return;
+  }
+
+  // Build enhanced table with nationality column from complex join
+  const parts = [];
+  parts.push('<h3>Race Results</h3>');
+  parts.push('<p class="results-info">📍 ' + (rows[0].circuit_name || 'Circuit') + ' • ' + (rows[0].country_name || '') + ' • ' + (rows[0].circuit_type || '') + '</p>');
+  parts.push('<table class="results-table">');
+  parts.push('<thead><tr><th>P</th><th>No</th><th>Driver</th><th>Nat</th><th>Constructor</th><th>Grid</th><th>Qual</th><th>Points</th></tr></thead>');
+  parts.push('<tbody>');
+
+  rows.forEach((r, index) => {
+    parts.push(`
+      <tr>
+        <td>${r.finish_position ?? (index + 1)}</td>
+        <td>${r.driver_number ?? '-'}</td>
+        <td title="${r.driver_abbr || ''}">${r.driver_name ?? r.driver_id}</td>
+        <td>${r.driver_nationality ?? '-'}</td>
+        <td>${r.constructor_name ?? r.constructor_id}</td>
+        <td>${r.grid_position ?? '-'}</td>
+        <td>${r.quali_position ?? '-'}</td>
         <td>${r.race_points ?? '-'}</td>
       </tr>
     `);

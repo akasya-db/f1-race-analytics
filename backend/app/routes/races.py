@@ -194,6 +194,46 @@ def get_race_data():
         db.close()
 
 
+@races_bp.route("/api/race_results_full/<int:race_id>")
+def get_race_results_full(race_id):
+    """Return full race results with complex 6-table join.
+    Includes: race, circuit, country, race_data, driver, constructor, driver nationality.
+    Query params: page (int)
+    """
+    raw_page = request.args.get('page', 1, type=int)
+    per_page = 50
+    offset = (raw_page - 1) * per_page
+
+    params = {
+        'race_id': race_id,
+        'limit': per_page,
+        'offset': offset
+    }
+
+    db = DatabaseConnection()
+    try:
+        sql_query = get_sql_query('select_race_results_full.sql')
+        db.execute(sql_query, params)
+        rows = db.fetchall()
+        data = [dict(row) for row in rows]
+        total_items = data[0]['full_count'] if data else 0
+        total_pages = (total_items + per_page - 1) // per_page
+
+        return jsonify({
+            'race_results': data,
+            'pagination': {
+                'current_page': raw_page,
+                'total_pages': total_pages,
+                'total_items': total_items
+            }
+        })
+    except Exception as e:
+        print(f"Error fetching full race results: {e}")
+        return jsonify({'error': 'Internal Server Error'}), 500
+    finally:
+        db.close()
+
+
 @races_bp.route('/race-data/new')
 def add_race_data_form_page():
     """Render form to create a new race_data row"""
