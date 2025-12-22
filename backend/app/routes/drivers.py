@@ -170,38 +170,41 @@ def add_driver_form_page():
 # ---------------------------------------------------------
 @drivers_bp.route("/api/add-driver", methods=["POST"])
 def add_driver():
-    if "user_id" not in session:
-        return jsonify({"success": False, "error": "Not authenticated"}), 401
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
 
-    db = DatabaseConnection()
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
     try:
-        data = request.get_json() or {}
+        data = request.get_json()
+        user_id = session.get('user_id')
 
-        raw_name = (data.get("name") or "").strip()
-        if not raw_name:
-            return jsonify({"success": False, "error": "Name is required"}), 400
+        db = DatabaseConnection()
 
-        name_parts = raw_name.split()
-        first_name = name_parts[0]
-        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else None
-
-        user_id = session.get("user_id")
-
+        # ---- DRIVER ID üret (ud-1, ud-2, ...) ----
         db.execute("""
             SELECT MAX(CAST(SUBSTRING(id FROM '[0-9]+') AS INTEGER)) AS max_id
             FROM driver
             WHERE id ~ '^ud-[0-9]+$'
         """)
         result = db.fetchone()
-        next_num = (result["max_id"] or 0) + 1
+        next_num = (result['max_id'] or 0) + 1 if result else 1
         driver_id = f"ud-{next_num}"
+
+        # ---- name → first_name / last_name ----
+        raw_name = data['name'].strip()
+        name_parts = raw_name.split()
+        first_name = name_parts[0]
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else None
 
         insert_query = """
             INSERT INTO driver (
                 id, user_id,
                 name, first_name, last_name, full_name,
                 abbreviation, permanent_number, gender,
-                date_of_birth, date_of_death, place_of_birth,
+                date_of_birth, place_of_birth,
                 country_of_birth_country_id, nationality_country_id,
                 best_championship_position, best_race_result,
                 total_championship_wins, total_race_starts,
@@ -212,7 +215,7 @@ def add_driver():
                 %(id)s, %(user_id)s,
                 %(name)s, %(first_name)s, %(last_name)s, %(full_name)s,
                 %(abbreviation)s, %(permanent_number)s, %(gender)s,
-                %(date_of_birth)s, NULL, %(place_of_birth)s,
+                %(date_of_birth)s, %(place_of_birth)s,
                 %(country_of_birth_country_id)s, %(nationality_country_id)s,
                 %(best_championship_position)s, %(best_race_result)s,
                 %(total_championship_wins)s, %(total_race_starts)s,
@@ -234,33 +237,36 @@ def add_driver():
             "permanent_number": data.get("permanent_number"),
             "gender": data.get("gender"),
 
-            "date_of_birth": data.get("date_of_birth"),
+            "date_of_birth": data["date_of_birth"],
             "place_of_birth": data.get("place_of_birth"),
 
-            "country_of_birth_country_id": data.get("country_of_birth_country_id"),
-            "nationality_country_id": data.get("nationality_country_id"),
+            "country_of_birth_country_id": data["country_of_birth_country_id"],
+            "nationality_country_id": data["nationality_country_id"],
 
-            "best_championship_position": data.get("best_championship_position"),
-            "best_race_result": data.get("best_race_result"),
+            "best_championship_position": data.get("best_championship_position") or None,
+            "best_race_result": data.get("best_race_result") or None,
 
-            "total_championship_wins": data.get("total_championship_wins"),
-            "total_race_starts": data.get("total_race_starts"),
-            "total_race_wins": data.get("total_race_wins"),
-            "total_race_laps": data.get("total_race_laps"),
-            "total_podiums": data.get("total_podiums"),
-            "total_points": data.get("total_points"),
-            "total_pole_positions": data.get("total_pole_positions"),
+            "total_championship_wins": data["total_championship_wins"],
+            "total_race_starts": data["total_race_starts"],
+            "total_race_wins": data["total_race_wins"],
+            "total_race_laps": data["total_race_laps"],
+            "total_podiums": data["total_podiums"],
+            "total_points": data["total_points"],
+            "total_pole_positions": data["total_pole_positions"],
         }
 
         db.execute(insert_query, params)
         db.commit()
 
-        return jsonify({"success": True, "driver_id": driver_id})
+        return jsonify({
+            "success": True,
+            "driver_id": driver_id,
+            "message": "Driver added successfully"
+        })
 
     except Exception as e:
-        print("ADD DRIVER ERROR:", e)
-        return jsonify({"success": False, "error": str(e)}), 500
-
+        print("Error adding driver:", e)
+        return jsonify({"error": str(e)}), 500
     finally:
         db.close()
 
@@ -269,31 +275,32 @@ def add_driver():
 # ---------------------------------------------------------
 @drivers_bp.route("/api/delete-driver/<driver_id>", methods=["POST"])
 def delete_driver(driver_id):
-    if "user_id" not in session:
-        return jsonify({"success": False, "error": "Not authenticated"}), 401
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
 
-    user_id = session.get("user_id")
     db = DatabaseConnection()
-
     try:
-        db.execute("""
-            DELETE FROM driver
-            WHERE id = %s
-              AND user_id = %s
-              AND is_real = FALSE
-        """, (driver_id, user_id))
+        user_id = session.get('user_id')
+
+        query = "DELETE FROM driver WHERE id = %s AND user_id = %s AND id LIKE 'ud-%%'"
+        db.execute(query, (driver_id, user_id))
 
         if db.cursor.rowcount == 0:
-            return jsonify({"success": False, "error": "Not found or permission denied"}), 403
+            return jsonify({'success': False, 'error': 'Permission denied or record not found'}), 403
 
         db.commit()
-        return jsonify({"success": True})
+        return jsonify({'success': True})
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
+        # (özellikle FK hatasını burada yakalayacağız)
+        try:
+            db.rollback()
+        except:
+            pass
+        return jsonify({'success': False, 'error': str(e)}), 500
     finally:
         db.close()
+
 
 @drivers_bp.route("/drivers/edit/<driver_id>")
 def edit_driver_form_page(driver_id):

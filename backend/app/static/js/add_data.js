@@ -7,6 +7,8 @@ let savedData = {
 
 let sectionMode = 'custom'; // 'custom' | 'existing'
 let raceMode = 'custom'; // 'custom' | 'existing'
+let driverMode = 'custom'; // 'custom' | 'existing'
+let driverSearchAbort = null;
 let sectionSearchAbort = null;
 
 // Toast notification function
@@ -43,6 +45,16 @@ function setRaceMode(mode){
   document.getElementById('race-mode-custom').style.display = mode === 'custom' ? 'block' : 'none';
   document.getElementById('race-mode-existing').style.display = mode === 'existing' ? 'block' : 'none';
 }
+
+function setDriverMode(mode){
+  driverMode = mode;
+  const btns = document.querySelectorAll('#driver-section .mode-btn');
+  btns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+
+  document.getElementById('driver-mode-custom').style.display   = mode === 'custom' ? 'block' : 'none';
+  document.getElementById('driver-mode-existing').style.display = mode === 'existing' ? 'block' : 'none';
+}
+
 
 function toggleSection(sectionName){
   const section = document.getElementById(`${sectionName}-section`);
@@ -264,6 +276,117 @@ async function saveExistingRace(){
   }
 }
 
+function saveDriver(){
+  if (driverMode !== 'custom') {
+    showToast('Switch to "Add custom driver" mode first', 'warning');
+    return;
+  }
+
+  const form = document.getElementById('driverForm');
+  if(!form.checkValidity()){ form.reportValidity(); return; }
+
+  const fd = new FormData(form);
+
+  const data = {
+    mode: 'custom',
+    data: {
+      name: fd.get('driver_name'),
+      abbreviation: fd.get('driver_abbreviation') || null,
+      permanent_number: fd.get('driver_permanent_number')
+        ? parseInt(fd.get('driver_permanent_number'), 10)
+        : null,
+      gender: fd.get('driver_gender') || null,
+
+      date_of_birth: fd.get('driver_date_of_birth'),
+      place_of_birth: fd.get('driver_place_of_birth') || null,
+
+      country_of_birth_country_id: fd.get('driver_country_of_birth_country_id'),
+      nationality_country_id: fd.get('driver_nationality_country_id'),
+
+      best_championship_position: fd.get('driver_best_championship_position') || null,
+      best_race_result: fd.get('driver_best_race_result') || null,
+
+      total_championship_wins: parseInt(fd.get('driver_total_championship_wins') || '0', 10),
+      total_race_starts: parseInt(fd.get('driver_total_race_starts') || '0', 10),
+      total_race_wins: parseInt(fd.get('driver_total_race_wins') || '0', 10),
+      total_race_laps: parseInt(fd.get('driver_total_race_laps') || '0', 10),
+      total_podiums: parseInt(fd.get('driver_total_podiums') || '0', 10),
+      total_points: parseFloat(fd.get('driver_total_points') || '0'),
+      total_pole_positions: parseInt(fd.get('driver_total_pole_positions') || '0', 10),
+    }
+  };
+
+  savedData.driver = data;
+  renderSummary();
+  showToast('Driver saved locally', 'success');
+}
+async function fetchDriverOptions(query){
+  const select = document.getElementById('existingDriverSelect');
+  if (!select) return;
+
+  if (driverSearchAbort) driverSearchAbort.abort();
+  driverSearchAbort = new AbortController();
+
+  const params = new URLSearchParams();
+  params.append('page', '1');
+  if (query) params.append('name', query);
+
+  try{
+    const res = await fetch(`/api/drivers?${params.toString()}`, { signal: driverSearchAbort.signal });
+    if(!res.ok) throw new Error('Failed to load drivers');
+    const json = await res.json();
+    const list = json.drivers || [];
+
+    select.innerHTML = list.map(d =>
+      `<option value="${d.id}">${d.name}${d.nationality ? ' — ' + d.nationality : ''}</option>`
+    ).join('') || `<option disabled>No results</option>`;
+  }catch(e){
+    if(e.name !== 'AbortError'){
+      select.innerHTML = `<option disabled>Error loading</option>`;
+      console.error(e);
+    }
+  }
+}
+
+async function saveExistingDriver(){
+  if (driverMode !== 'existing') {
+    showToast('Switch to "Select existing" mode first', 'warning');
+    return;
+  }
+
+  const select = document.getElementById('existingDriverSelect');
+  if(!select || !select.value){
+    showToast('Please select a driver from the list', 'warning');
+    return;
+  }
+
+  const driverId = select.value;
+
+  try{
+    const res = await fetch(`/api/drivers/${driverId}`);
+    if(!res.ok) throw new Error('Failed to load driver details');
+    const d = await res.json();
+
+    savedData.driver = {
+      mode: 'existing',
+      id: d.id,
+      name: d.name || d.full_name || '-',
+      nationality: d.nationality || '-',
+      date_of_birth: d.date_of_birth || null,
+      total_championship_wins: d.total_championship_wins || 0,
+      total_race_starts: d.total_race_starts || 0,
+      total_points: d.total_points || 0,
+      total_podiums: d.total_podiums || 0,
+      total_pole_positions: d.total_pole_positions || 0
+    };
+
+    renderSummary();
+    showToast('Driver selected successfully', 'success');
+  }catch(e){
+    showToast('Error loading driver: ' + e.message, 'error');
+    console.error(e);
+  }
+}
 
 async function submitAllData(){
   const btn = document.getElementById('submitAllBtn');
@@ -304,6 +427,39 @@ async function submitAllData(){
         };
       } else {
         messages.push('Existing constructor selected.');
+      }
+    }
+
+        // Handle driver submission
+    if (savedData.driver) {
+      if (savedData.driver.mode === 'custom') {
+        const payload = savedData.driver.data;
+        const res = await fetch('/api/add-driver', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if(!res.ok) throw new Error(json.error || 'Failed to add driver');
+
+        messages.push('Driver added successfully!');
+
+        document.getElementById('driverForm')?.reset();
+
+        savedData.driver = {
+          mode: 'existing',
+          id: json.driver_id,              
+          name: payload.name,
+          nationality: '-',                
+          date_of_birth: payload.date_of_birth || null,
+          total_championship_wins: payload.total_championship_wins,
+          total_race_starts: payload.total_race_starts,
+          total_points: payload.total_points,
+          total_podiums: payload.total_podiums,
+          total_pole_positions: payload.total_pole_positions
+        };
+      } else {
+        messages.push('Existing driver selected.');
       }
     }
 
@@ -409,14 +565,51 @@ function renderSummary(){
     }
   }
 
-  if(savedData.driver){
-    parts.push(`
-      <div class="summary-block">
-        <h4>Driver</h4>
-        <div class="summary-list"><div class="summary-item">Saved</div></div>
-      </div>
-    `);
+    if(savedData.driver){
+    if(savedData.driver.mode === 'custom'){
+      const d = savedData.driver.data;
+      parts.push(`
+        <div class="summary-block" id="summary-driver">
+          <button type="button" class="btn-delete-summary" onclick="removeItem('driver')" title="Remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </button>
+
+          <h4>Driver (custom)</h4>
+          <div class="summary-list">
+            <div class="summary-item"><b>Name:</b> ${d.name}</div>
+            <div class="summary-item"><b>DOB:</b> ${d.date_of_birth || '-'}</div>
+            <div class="summary-item"><b>Wins:</b> ${d.total_championship_wins}</div>
+            <div class="summary-item"><b>Starts:</b> ${d.total_race_starts}</div>
+            <div class="summary-item"><b>Podiums:</b> ${d.total_podiums}</div>
+            <div class="summary-item"><b>Points:</b> ${d.total_points}</div>
+            <div class="summary-item"><b>Poles:</b> ${d.total_pole_positions}</div>
+          </div>
+        </div>
+      `);
+    } else {
+      parts.push(`
+        <div class="summary-block" id="summary-driver">
+          <button type="button" class="btn-delete-summary" onclick="deleteSavedDriverFromDB()" title="Delete from DB">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </button>
+
+          <h4>Driver (existing)</h4>
+          <div class="summary-list">
+            <div class="summary-item"><b>Name:</b> ${savedData.driver.name}</div>
+            <div class="summary-item"><b>Nationality:</b> ${savedData.driver.nationality || '-'}</div>
+            <div class="summary-item"><b>DOB:</b> ${savedData.driver.date_of_birth || '-'}</div>
+            <div class="summary-item"><b>Wins:</b> ${savedData.driver.total_championship_wins}</div>
+            <div class="summary-item"><b>Starts:</b> ${savedData.driver.total_race_starts}</div>
+            <div class="summary-item"><b>Podiums:</b> ${savedData.driver.total_podiums}</div>
+            <div class="summary-item"><b>Points:</b> ${savedData.driver.total_points}</div>
+            <div class="summary-item"><b>Poles:</b> ${savedData.driver.total_pole_positions}</div>
+            <div class="summary-item"><b>ID:</b> ${savedData.driver.id}</div>
+          </div>
+        </div>
+      `);
+    }
   }
+
   if(savedData.race){
       const r = savedData.race.data;
       const circuitSelect = document.getElementById('race_circuit');
@@ -494,6 +687,13 @@ document.addEventListener('DOMContentLoaded', () => {
     raceSearch.addEventListener('input', (e)=> debouncedRace(e.target.value.trim()));
     // load first page blank
     fetchRaceOptions('');
+  }
+    // Driver search listeners
+  const driverSearch = document.getElementById('driverSearch');
+  if (driverSearch) {
+    const debouncedDriver = debounce((v)=>fetchDriverOptions(v), 250);
+    driverSearch.addEventListener('input', (e)=> debouncedDriver(e.target.value.trim()));
+    fetchDriverOptions('');
   }
 
   // Enhance native selects with themed custom selects for better UI
@@ -578,4 +778,33 @@ function enhanceThemedSelect(selector){
   wrapper.appendChild(trigger);
   wrapper.appendChild(options);
   sel.parentNode.insertBefore(wrapper, sel.nextSibling);
+}
+
+async function deleteSavedDriverFromDB(){
+  if(!savedData.driver || savedData.driver.mode !== 'existing' || !savedData.driver.id){
+    showToast('No existing driver to delete', 'warning');
+    return;
+  }
+
+  const driverId = savedData.driver.id;
+
+  try{
+    const res = await fetch(`/api/delete-driver/${encodeURIComponent(driverId)}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'}
+    });
+
+    const json = await res.json().catch(()=> ({}));
+
+    if(!res.ok || json.success === false){
+      throw new Error(json.error || 'Delete failed');
+    }
+
+    savedData.driver = null;
+    renderSummary();
+    showToast('Driver deleted successfully', 'success');
+  }catch(e){
+    showToast('Error deleting driver: ' + e.message, 'error');
+    console.error(e);
+  }
 }
